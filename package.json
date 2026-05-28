@@ -1,0 +1,13 @@
+{
+  "name": "arduino-simulator",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "build": "pnpm -r run build",
+    "start": "pnpm -r run start",
+    "clean": "pnpm -r run clean"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
