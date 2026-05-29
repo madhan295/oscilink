@@ -1,5 +1,3 @@
-import React from 'react';
-
 function App() {
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
@@ -20,15 +18,15 @@ function App() {
 
         {/* Center Panel (Canvas/Editor) */}
         <main className="flex-1 bg-[#181818] relative flex flex-col">
-           <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center">
             <span className="text-text-secondary">Circuit Canvas / Code Editor</span>
           </div>
         </main>
 
         {/* Right Panel (Properties/Inspector) */}
         <aside className="w-[360px] min-w-[360px] bg-surface border-l border-border p-4 flex flex-col">
-           <h2 className="text-sm font-medium text-text-secondary uppercase tracking-wider mb-4">Properties</h2>
-           <div className="flex-1 flex items-center justify-center border-2 border-dashed border-border rounded">
+          <h2 className="text-sm font-medium text-text-secondary uppercase tracking-wider mb-4">Properties</h2>
+          <div className="flex-1 flex items-center justify-center border-2 border-dashed border-border rounded">
             <span className="text-text-secondary">Inspector Panel</span>
           </div>
         </aside>
