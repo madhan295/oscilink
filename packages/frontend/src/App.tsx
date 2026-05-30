@@ -1,3 +1,6 @@
+
+import { Canvas } from './components/canvas/Canvas';
+
 function App() {
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
@@ -18,9 +21,7 @@ function App() {
 
         {/* Center Panel (Canvas/Editor) */}
         <main className="flex-1 bg-[#181818] relative flex flex-col">
-          <div className="flex-1 flex items-center justify-center">
-            <span className="text-text-secondary">Circuit Canvas / Code Editor</span>
-          </div>
+          <Canvas />
         </main>
 
         {/* Right Panel (Properties/Inspector) */}
