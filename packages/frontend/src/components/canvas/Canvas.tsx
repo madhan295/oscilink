@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback, createContext } from '
 import { Stage, Layer, Group } from 'react-konva';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { Grid } from './Grid';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Maximize } from 'lucide-react';
 import Konva from 'konva';
 
 export const CanvasContext = createContext<{ stopPropagation: (e: any) => void }>({
@@ -20,6 +20,7 @@ export const Canvas: React.FC = () => {
   const viewport = useWorkspaceStore((state) => state.viewport);
   const setViewport = useWorkspaceStore((state) => state.setViewport);
   const clearSelection = useWorkspaceStore((state) => state.clearSelection);
+  const components = useWorkspaceStore((state) => state.components);
 
   // Measure canvas container dimensions using ResizeObserver
   useEffect(() => {
@@ -137,6 +138,43 @@ export const Canvas: React.FC = () => {
     setViewport({ scale: 1, x: 0, y: 0 });
   };
 
+  const handleFit = () => {
+    if (components.length === 0) {
+      handleResetZoom();
+      return;
+    }
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    components.forEach(c => {
+      if (c.position.x < minX) minX = c.position.x;
+      if (c.position.y < minY) minY = c.position.y;
+      if (c.position.x > maxX) maxX = c.position.x;
+      if (c.position.y > maxY) maxY = c.position.y;
+    });
+
+    const padding = 100;
+    // Rough estimate for max component size
+    const compWidth = 200;
+    const compHeight = 200;
+    
+    const width = (maxX - minX) + compWidth;
+    const height = (maxY - minY) + compHeight;
+
+    const scaleX = dimensions.width / (width + padding * 2);
+    const scaleY = dimensions.height / (height + padding * 2);
+    let newScale = Math.min(scaleX, scaleY);
+    newScale = Math.max(0.1, Math.min(newScale, 5.0));
+
+    // Calculate center based on max and min plus half component size
+    const centerX = minX + (maxX - minX) / 2 + compWidth / 2;
+    const centerY = minY + (maxY - minY) / 2 + compHeight / 2;
+
+    const newX = dimensions.width / 2 - centerX * newScale;
+    const newY = dimensions.height / 2 - centerY * newScale;
+
+    setViewport({ scale: newScale, x: newX, y: newY });
+  };
+
   const cursorStyle = isPanning ? 'grabbing' : (isSpacePressed ? 'grab' : 'default');
   const zoomPercent = Math.round(viewport.scale * 100);
 
@@ -188,6 +226,13 @@ export const Canvas: React.FC = () => {
 
       {/* Zoom Indicator UI Overlay */}
       <div className="absolute bottom-4 right-4 flex items-center bg-surface border border-border rounded-full shadow-lg overflow-hidden text-text select-none z-10">
+        <button 
+          onClick={handleFit}
+          className="p-2 hover:bg-surface-hover transition-colors flex items-center justify-center border-r border-border"
+          title="Fit to Screen"
+        >
+          <Maximize size={16} />
+        </button>
         <button 
           onClick={handleZoomOut}
           className="p-2 hover:bg-surface-hover transition-colors flex items-center justify-center"
