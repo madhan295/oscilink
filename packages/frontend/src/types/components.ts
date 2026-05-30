@@ -1,18 +1,18 @@
 export type PinType = 'digital' | 'analog' | 'power' | 'ground' | 'PWM' | 'I2C_SDA' | 'I2C_SCL' | 'SPI';
 export type PinDirection = 'input' | 'output' | 'bidirectional';
-export type ComponentType = 
-  | 'Arduino Uno' 
-  | 'LED' 
-  | 'Resistor' 
-  | 'Push Button' 
-  | 'Potentiometer' 
-  | 'Servo Motor' 
-  | 'LCD 16x2' 
-  | 'Buzzer' 
-  | 'Ultrasonic Sensor' 
-  | 'Temperature Sensor' 
-  | 'Relay' 
-  | 'Breadboard';
+export type ComponentType =
+  | 'ARDUINO_UNO'
+  | 'LED'
+  | 'RESISTOR'
+  | 'PUSH_BUTTON'
+  | 'POTENTIOMETER'
+  | 'SERVO_MOTOR'
+  | 'LCD_16X2'
+  | 'BUZZER'
+  | 'ULTRASONIC_SENSOR'
+  | 'TEMPERATURE_SENSOR'
+  | 'RELAY'
+  | 'BREADBOARD';
 
 export type LEDColor = 'red' | 'green' | 'blue' | 'yellow' | 'white';
 export type WireColor = 'red' | 'black' | 'blue' | 'green' | 'yellow' | 'orange' | 'white';
