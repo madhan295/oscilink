@@ -49,9 +49,8 @@ export const ComponentLayer: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = useSimulationStore.subscribe(
-      (state) => state.componentStates,
-      (newStates, oldStates) => {
-        if (newStates !== oldStates && layerRef.current) {
+      (state, oldState) => {
+        if (state.componentStates !== oldState.componentStates && layerRef.current) {
           layerRef.current.batchDraw();
         }
       }

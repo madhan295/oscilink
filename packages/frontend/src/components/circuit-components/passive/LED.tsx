@@ -4,15 +4,13 @@ import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
 import { useSimulationStore } from '../../../store/simulationStore';
-import { CanvasContext } from '../../../canvas/Canvas';
+import { CanvasContext } from '../../canvas/Canvas';
 
 interface LEDProps {
   component: CircuitComponent;
 }
 
 export const LED: React.FC<LEDProps> = ({ component }) => {
-  const [hoveredPin, setHoveredPin] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const outerGroupRef = useRef<any>(null);
   const [displayedBrightness, setDisplayedBrightness] = useState(0);
   const animFrameRef = useRef<number>();
@@ -22,8 +20,10 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
   const selectedComponentIds = useWorkspaceStore((state) => state.selectedComponentIds);
   const isSelected = selectedComponentIds.includes(component.id);
   
-  const ledState = useSimulationStore((state) => state.componentStates[component.id]);
-  const targetBrightness = ledState?.brightness !== undefined ? ledState.brightness : 0;
+  const compState = useSimulationStore((state) => state.componentStates[component.id]);
+  const targetBrightness = (compState as { brightness?: number })?.brightness ?? 0;
+  
+  // Animate brightness smoothly
 
   useEffect(() => {
     let currentBrightness = displayedBrightness;
@@ -56,13 +56,11 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetBrightness]);
 
-  const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
-    setIsDragging(true);
+  const handleDragStart = () => {
     useWorkspaceStore.getState().pushHistory();
   };
 
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
-    setIsDragging(false);
     useWorkspaceStore.getState().updateComponentPosition(component.id, {
       x: e.target.x(),
       y: e.target.y()
@@ -78,7 +76,7 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
     handlePinMouseDown({ componentId: component.id, pinId });
   };
 
-  const baseColor = component.properties?.color || 'RED';
+  const baseColor = String(component.properties?.color || 'RED').toUpperCase();
   const colorMap: Record<string, { r: number, g: number, b: number }> = {
     RED: { r: 255, g: 0, b: 0 },
     GREEN: { r: 0, g: 255, b: 0 },
@@ -87,7 +85,7 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
     WHITE: { r: 255, g: 255, b: 255 }
   };
   
-  const c = colorMap[baseColor.toUpperCase()] || colorMap.RED;
+  const c = colorMap[baseColor] || colorMap.RED;
   
   const r = Math.floor(c.r * 0.3 + (c.r - c.r * 0.3) * displayedBrightness);
   const g = Math.floor(c.g * 0.3 + (c.g - c.g * 0.3) * displayedBrightness);

@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback, createContext } from 'react';
-import { Stage, Layer, Group } from 'react-konva';
+import { Stage, Layer } from 'react-konva';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { Grid } from './Grid';
 import { Plus, Minus, Maximize } from 'lucide-react';
 import Konva from 'konva';
-import { ArduinoUno } from '../circuit-components/arduino/ArduinoUno';
 import { useWireDrawing } from '../../hooks/useWireDrawing';
 import { WireLayer } from './WireLayer';
 import { ComponentLayer } from './ComponentLayer';
@@ -43,8 +42,7 @@ export const Canvas: React.FC = () => {
     handlePinMouseEnter,
     handlePinMouseLeave,
     handleCanvasMouseMove: handleWireMouseMove,
-    handleStageClick: handleWireStageClick,
-    isDrawingWire
+    handleStageClick: handleWireStageClick
   } = useWireDrawing();
 
   useEffect(() => {

@@ -22,7 +22,7 @@ export const ArduinoUno: React.FC<ArduinoUnoProps> = ({ component }) => {
   const isSelected = selectedComponentIds.includes(component.id);
   const pinVoltages = useSimulationStore(state => state.pinVoltages);
 
-  const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
+  const handleDragStart = () => {
     setIsDragging(true);
     useWorkspaceStore.getState().pushHistory();
   };

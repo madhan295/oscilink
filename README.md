@@ -31,6 +31,24 @@ A highly rigid factory architecture (`componentFactory.ts`) ensuring flawless in
 - Exhaustive pin layouts built directly into the factory (spanning the Arduino Uno's 200x140 boundary constraints, LCD 16x2 grid arrays, Breadboard rails, and standard 2-pin passives).
 - Utilizes strict `SCREAMING_SNAKE_CASE` constants tightly bound to the TypeScript union types to guarantee instantiation reliability and block invalid component requests.
 
+### 6. Interactive Circuit Components
+- **Visual Design**: Beautiful, responsive SVGs and Konva shapes tailored for circuit accuracy.
+- **Components Implemented**:
+  - `ArduinoUno`: Fully featured SVG-based Uno board with active selection states, pin hovering, and strict data-pin connection limits.
+  - `LED`: Interpolates physical brightness based on the engine's `simulationStore` state. Emits a realistic glow effect when powered.
+  - `Resistor`: Procedurally generated color bands calculated dynamically based on its `resistance` property.
+  - `PushButton`: Fully interactive with visual pressing animations, triggering immediate events to the simulation core.
+
+### 7. Advanced Rendering Layers & Wiring
+A strictly ordered Konva rendering stack to guarantee 60fps performance during complex interactions:
+- **`GridLayer`**: Background visual reference dots.
+- **`WireLayer`**: Interactive wiring system.
+  - Features precise **Manhattan routing** (L-shaped logic) for elegant wire pathways.
+  - Batches static non-selected wires into a single massive Konva `<Shape>` via a custom scene function to eliminate node-count bloat.
+  - Selected or errored wires use animated dashed paths and render independently.
+- **`ComponentLayer`**: Routes and memoizes active circuit components. Directly subscribes to `simulationStore` via Zustand to trigger pinpoint `layer.batchDraw()` updates, completely bypassing standard React render loops for raw speed.
+- **`InteractionLayer`**: A top-level layer responsible for global interactions, such as rubber-band selection logic across the canvas and drawing global bounding boxes, ensuring component definitions remain clean and free of excessive logic.
+
 ## Tech Stack
 ### Frontend (`packages/frontend`)
 - React 18 & Vite

@@ -5,7 +5,7 @@ import Konva from 'konva';
 import { CircuitComponent } from '../../../types/components';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
 import { useSimulationStore } from '../../../store/simulationStore';
-import { CanvasContext } from '../../../canvas/Canvas';
+import { CanvasContext } from '../../canvas/Canvas';
 
 interface PushButtonProps {
   component: CircuitComponent;
@@ -13,7 +13,6 @@ interface PushButtonProps {
 
 export const PushButton: React.FC<PushButtonProps> = ({ component }) => {
   const [hoveredPin, setHoveredPin] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [isHoveringButton, setIsHoveringButton] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   
@@ -26,13 +25,11 @@ export const PushButton: React.FC<PushButtonProps> = ({ component }) => {
   const isSelected = selectedComponentIds.includes(component.id);
   const status = useSimulationStore((state) => state.status);
   
-  const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
-    setIsDragging(true);
+  const handleDragStart = () => {
     useWorkspaceStore.getState().pushHistory();
   };
 
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
-    setIsDragging(false);
     useWorkspaceStore.getState().updateComponentPosition(component.id, {
       x: e.target.x(),
       y: e.target.y()
@@ -62,7 +59,7 @@ export const PushButton: React.FC<PushButtonProps> = ({ component }) => {
     }));
   };
 
-  const handleButtonUp = (e: KonvaEventObject<MouseEvent>) => {
+  const handleButtonUp = () => {
     if (!isPressed) return;
     setIsPressed(false);
     if (capRef.current) {
@@ -171,10 +168,10 @@ export const PushButton: React.FC<PushButtonProps> = ({ component }) => {
           setIsHoveringButton(true);
           if (status === 'RUNNING') document.body.style.cursor = 'pointer';
         }}
-        onMouseLeave={(e) => {
+        onMouseLeave={() => {
           setIsHoveringButton(false);
           document.body.style.cursor = 'default';
-          handleButtonUp(e);
+          handleButtonUp();
         }}
         onMouseDown={handleButtonDown}
         onMouseUp={handleButtonUp}

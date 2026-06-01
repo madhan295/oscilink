@@ -3,7 +3,7 @@ import { Group, Rect, Line, Circle, Text } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
-import { CanvasContext } from '../../../canvas/Canvas';
+import { CanvasContext } from '../../canvas/Canvas';
 
 interface ResistorProps {
   component: CircuitComponent;
@@ -32,8 +32,6 @@ function getResistorBands(resistance: number): string[] {
 }
 
 export const Resistor: React.FC<ResistorProps> = ({ component }) => {
-  const [hoveredPin, setHoveredPin] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const outerGroupRef = useRef<any>(null);
 
   const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
@@ -41,8 +39,7 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
   const selectedComponentIds = useWorkspaceStore((state) => state.selectedComponentIds);
   const isSelected = selectedComponentIds.includes(component.id);
   
-  const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
-    setIsDragging(true);
+  const handleDragStart = () => {
     useWorkspaceStore.getState().pushHistory();
   };
 
@@ -63,7 +60,7 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
     handlePinMouseDown({ componentId: component.id, pinId });
   };
 
-  const resistance = component.properties?.resistance || 220;
+  const resistance = Number(component.properties?.resistance || 220);
   const bands = getResistorBands(resistance);
 
   let resistanceLabel = `${resistance}Ω`;
