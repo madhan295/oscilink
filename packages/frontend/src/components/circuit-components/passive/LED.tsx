@@ -140,7 +140,7 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
             x={isAnode ? -10 : 4} 
             y={-3}
             fontSize={8} fontFamily="sans-serif" fontStyle="bold"
-            fill="#ffffff" opacity={0.85}
+            fill="#374151" opacity={0.85}
           />
         </Group>
       );

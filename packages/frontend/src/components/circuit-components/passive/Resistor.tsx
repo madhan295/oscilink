@@ -166,7 +166,7 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
         align="center"
         fontSize={9}
         fontFamily="sans-serif"
-        fill="#ffffff"
+        fill="#374151"
         listening={false}
       />
 
