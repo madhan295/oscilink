@@ -82,7 +82,7 @@ export const Grid: React.FC<GridProps> = ({ width, height }) => {
             }
           }
           
-          context.fillStyle = 'rgba(255,255,255,0.08)';
+          context.fillStyle = '#cccccc';
           context.fill();
         }}
       />

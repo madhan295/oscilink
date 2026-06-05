@@ -18,7 +18,7 @@ function App() {
         <ComponentPalette />
 
         {/* Center Panel (Canvas/Editor) */}
-        <main className="flex-1 bg-[#181818] relative flex flex-col">
+        <main className="flex-1 bg-[#FFFAFA] relative flex flex-col">
           <Canvas />
           <WireColorPicker />
         </main>
