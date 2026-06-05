@@ -38,6 +38,11 @@ function getPinNormal(comp: CircuitComponent, pin: Pin): { dx: number, dy: numbe
 }
 
 function routeWire(startX: number, startY: number, endX: number, endY: number, startNormal: { dx: number, dy: number }, endNormal?: { dx: number, dy: number }): number[] {
+  const dist = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+  if (dist < 60) {
+    return [startX, startY, endX, endY];
+  }
+
   const OFF = 20;
 
   const p1x = startX;

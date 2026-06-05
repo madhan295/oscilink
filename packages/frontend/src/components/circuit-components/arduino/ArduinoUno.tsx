@@ -353,7 +353,7 @@ export const ArduinoUno: React.FC<ArduinoUnoProps> = ({ component }) => {
               shadowBlur={glowCol !== 'transparent' ? 3 : 0}
             />
             {/* Label */}
-            {!isNC && (
+            {!isNC && pin.id !== 'SCL' && pin.id !== 'SDA' && (
               <Text
                 text={pin.label}
                 x={w / 2}

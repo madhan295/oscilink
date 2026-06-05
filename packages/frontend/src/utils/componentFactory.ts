@@ -46,8 +46,8 @@ export function createComponent(type: ComponentType, position: Point): CircuitCo
       const gA_startX = 234;
       const gA_space = 172 / 9;
       const groupA = [
-        { id: 'NC_SCL', type: 'digital', dir: 'input', label: '' },
-        { id: 'NC_SDA', type: 'digital', dir: 'input', label: '' },
+        { id: 'SCL', type: 'I2C_SCL', dir: 'bidirectional', label: 'SCL' },
+        { id: 'SDA', type: 'I2C_SDA', dir: 'bidirectional', label: 'SDA' },
         { id: 'AREF', type: 'analog', dir: 'input', label: 'AREF' },
         { id: 'GND_TOP', type: 'ground', dir: 'output', label: 'GND' },
         { id: 'D13', type: 'digital', dir: 'bidirectional', label: '13' },
