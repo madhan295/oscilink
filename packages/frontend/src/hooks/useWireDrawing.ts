@@ -2,83 +2,10 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useWorkspaceStore } from '../store/workspaceStore';
 import { PinRef, Point, CircuitComponent, Pin } from '../types/components';
 
-function getPinNormal(comp: CircuitComponent, pin: Pin): { dx: number, dy: number } {
-  if (comp.type === 'LED') return { dx: 0, dy: 1 };
-  
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  const pins = Object.values(comp.pins);
-  if (pins.length <= 1) return { dx: 0, dy: -1 };
-
-  pins.forEach(p => {
-    if (p.position.x < minX) minX = p.position.x;
-    if (p.position.x > maxX) maxX = p.position.x;
-    if (p.position.y < minY) minY = p.position.y;
-    if (p.position.y > maxY) maxY = p.position.y;
-  });
-
-  const spreadX = maxX - minX;
-  const spreadY = maxY - minY;
-
-  if (spreadX > spreadY * 1.5) {
-    return pin.position.x < minX + spreadX / 2 ? { dx: -1, dy: 0 } : { dx: 1, dy: 0 };
-  } else if (spreadY > spreadX * 1.5) {
-    return pin.position.y < minY + spreadY / 2 ? { dx: 0, dy: -1 } : { dx: 0, dy: 1 };
-  } else {
-    const dTop = Math.abs(pin.position.y - minY);
-    const dBottom = Math.abs(maxY - pin.position.y);
-    const dLeft = Math.abs(pin.position.x - minX);
-    const dRight = Math.abs(maxX - pin.position.x);
-
-    // Prefer Y axis for corner pins unless X axis is strictly closer
-    if (dTop <= dLeft && dTop <= dRight && dTop <= dBottom) return { dx: 0, dy: -1 };
-    if (dBottom <= dLeft && dBottom <= dRight) return { dx: 0, dy: 1 };
-    if (dLeft <= dRight) return { dx: -1, dy: 0 };
-    return { dx: 1, dy: 0 };
-  }
-}
-
-function routeWire(startX: number, startY: number, endX: number, endY: number, startNormal: { dx: number, dy: number }, endNormal?: { dx: number, dy: number }): number[] {
-  const dist = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-  if (dist < 60) {
-    return [startX, startY, endX, endY];
-  }
-
-  const OFF = 20;
-
-  const p1x = startX;
-  const p1y = startY;
-  const p2x = startX + startNormal.dx * OFF;
-  const p2y = startY + startNormal.dy * OFF;
-
-  if (endNormal) {
-    const pEx = endX + endNormal.dx * OFF;
-    const pEy = endY + endNormal.dy * OFF;
-
-    if (startNormal.dy !== 0 && endNormal.dy !== 0) {
-      const midY = (p2y + pEy) / 2;
-      return [p1x, p1y, p2x, p2y, p2x, midY, pEx, midY, pEx, pEy, endX, endY];
-    } else if (startNormal.dx !== 0 && endNormal.dx !== 0) {
-      const midX = (p2x + pEx) / 2;
-      return [p1x, p1y, p2x, p2y, midX, p2y, midX, pEy, pEx, pEy, endX, endY];
-    } else {
-      if (startNormal.dy !== 0) {
-        return [p1x, p1y, p2x, p2y, pEx, p2y, pEx, pEy, endX, endY];
-      } else {
-        return [p1x, p1y, p2x, p2y, p2x, pEy, pEx, pEy, endX, endY];
-      }
-    }
-  } else {
-    if (startNormal.dy !== 0) {
-      return [p1x, p1y, p2x, p2y, endX, p2y, endX, endY];
-    } else {
-      return [p1x, p1y, p2x, p2y, p2x, endY, endX, endY];
-    }
-  }
-}
-
 export const useWireDrawing = () => {
   const [previewWirePoints, setPreviewWirePoints] = useState<number[] | null>(null);
   const [hoveredPin, setHoveredPin] = useState<PinRef | null>(null);
+  const [intermediatePoints, setIntermediatePoints] = useState<Point[]>([]);
   
   const isDrawingWire = useWorkspaceStore(state => state.isDrawingWire);
   const wireDrawingFrom = useWorkspaceStore(state => state.wireDrawingFrom);
@@ -92,6 +19,7 @@ export const useWireDrawing = () => {
   const handlePinMouseDown = useCallback((pinRef: PinRef) => {
     if (!isDrawingWire) {
       startWireDrawing(pinRef);
+      setIntermediatePoints([]);
       // Initialize preview from this pin to itself
       const comp = components.find(c => c.id === pinRef.componentId);
       const pin = comp?.pins[pinRef.pinId];
@@ -117,10 +45,12 @@ export const useWireDrawing = () => {
               const endX = endComp.position.x + endPin.position.x;
               const endY = endComp.position.y + endPin.position.y;
               
-              const startNormal = getPinNormal(startComp, startPin);
-              const endNormal = getPinNormal(endComp, endPin);
+              const points = [startX, startY];
+              intermediatePoints.forEach(p => {
+                points.push(p.x, p.y);
+              });
+              points.push(endX, endY);
               
-              const points = routeWire(startX, startY, endX, endY, startNormal, endNormal);
               finishWireDrawing(pinRef, points);
             } else {
               cancelWireDrawing();
@@ -136,10 +66,12 @@ export const useWireDrawing = () => {
         // Same pin, restart
         cancelWireDrawing();
         startWireDrawing(pinRef);
+        setIntermediatePoints([]);
       }
       setPreviewWirePoints(null);
+      setIntermediatePoints([]);
     }
-  }, [isDrawingWire, wireDrawingFrom, components, previewWirePoints, startWireDrawing, finishWireDrawing, cancelWireDrawing]);
+  }, [isDrawingWire, wireDrawingFrom, components, previewWirePoints, intermediatePoints, startWireDrawing, finishWireDrawing, cancelWireDrawing]);
 
   const handlePinMouseEnter = useCallback((pinRef: PinRef) => {
     setHoveredPin(pinRef);
@@ -162,29 +94,31 @@ export const useWireDrawing = () => {
         let endX = worldPoint.x;
         let endY = worldPoint.y;
         
-        const startNormal = getPinNormal(startComp, startPin);
-        
-        let endNormal: { dx: number, dy: number } | undefined = undefined;
         if (hoveredPin) {
            const endComp = components.find(c => c.id === hoveredPin.componentId);
            const pin = endComp?.pins[hoveredPin.pinId];
            if (endComp && pin) {
              endX = endComp.position.x + pin.position.x;
              endY = endComp.position.y + pin.position.y;
-             endNormal = getPinNormal(endComp, pin);
            }
         }
 
-        const points = routeWire(startX, startY, endX, endY, startNormal, endNormal);
+        const points = [startX, startY];
+        intermediatePoints.forEach(p => {
+          points.push(p.x, p.y);
+        });
+        points.push(endX, endY);
+
         setPreviewWirePoints(points);
       }
     }
-  }, [isDrawingWire, wireDrawingFrom, components, hoveredPin]);
+  }, [isDrawingWire, wireDrawingFrom, components, hoveredPin, intermediatePoints]);
 
   const handleCanvasKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape' && isDrawingWire) {
       cancelWireDrawing();
       setPreviewWirePoints(null);
+      setIntermediatePoints([]);
     }
   }, [isDrawingWire, cancelWireDrawing]);
 
@@ -196,10 +130,11 @@ export const useWireDrawing = () => {
 
   const handleStageClick = useCallback((e: any) => {
     if (isDrawingWire && !hoveredPin) {
-      cancelWireDrawing();
-      setPreviewWirePoints(null);
+      // User clicked on canvas to create an intermediate point
+      const newPoint = currentMousePosRef.current;
+      setIntermediatePoints(prev => [...prev, newPoint]);
     }
-  }, [isDrawingWire, hoveredPin, cancelWireDrawing]);
+  }, [isDrawingWire, hoveredPin]);
 
   return {
     previewWirePoints,
