@@ -4,6 +4,7 @@ import { WireColorPicker } from './components/ui/WireColorPicker';
 import { UndoRedoButtons } from './components/ui/UndoRedoButtons';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { CodeEditor } from './components/editor/CodeEditor';
+import { SerialMonitor } from './components/editor/SerialMonitor';
 import { Toaster } from 'react-hot-toast';
 import { useState } from 'react';
 import { PanelLeft, PanelRight } from 'lucide-react';
@@ -65,12 +66,9 @@ function App() {
                 <CodeEditor />
               </div>
               
-              {/* Bottom Portion: Properties */}
-              <div className="h-[250px] min-h-[200px] border-t border-border p-4 flex flex-col">
-                <h2 className="text-sm font-medium text-text-secondary uppercase tracking-wider mb-4">Properties</h2>
-                <div className="flex-1 flex items-center justify-center border-2 border-dashed border-border rounded">
-                  <span className="text-text-secondary">Inspector Panel</span>
-                </div>
+              {/* Bottom Portion: Serial Monitor */}
+              <div className="h-[250px] min-h-[200px] flex flex-col">
+                <SerialMonitor />
               </div>
             </aside>
           </div>
