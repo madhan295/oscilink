@@ -1,6 +1,7 @@
 import { PanelLeft, PanelRight, Play, Loader2, Check } from 'lucide-react';
 import { UndoRedoButtons } from './UndoRedoButtons';
 import { useCompiler } from '../../hooks/useCompiler';
+import { useSimulation } from '../../hooks/useSimulation';
 import { useEditorStore } from '../../store/editorStore';
 import { useSimulationStore } from '../../store/simulationStore';
 import { CodeEditorRef } from '../editor/CodeEditor';
@@ -15,6 +16,7 @@ interface ToolbarProps {
 
 export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, editorRef }: ToolbarProps) {
   const { compile } = useCompiler();
+  const simulation = useSimulation(); // Call this to ensure worker initializes
   const isCompiling = useEditorStore(state => state.isCompiling);
   const compilationErrors = useEditorStore(state => state.compilationErrors);
   const status = useSimulationStore(state => state.status);

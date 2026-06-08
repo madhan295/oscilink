@@ -13,7 +13,7 @@ function parseIntelHex(hexString) {
   const flash = new Uint8Array(32768);
   flash.fill(0xFF); // Unprogrammed flash is typically 0xFF
   const lines = hexString.split(/\r?\n/);
-  
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
@@ -47,7 +47,7 @@ function parseIntelHex(hexString) {
       break;
     }
   }
-  
+
   return flash;
 }
 
@@ -83,7 +83,7 @@ function simulationLoop() {
   // 16MHz clock * 10% = 1.6MHz = 1,600,000 cycles / second
   // elapsed is in ms, so cycles = elapsed * 1600
   let cyclesToRun = Math.floor(elapsed * 1600);
-  
+
   // Cap at 5000 cycles per tick to prevent tab freezing
   if (cyclesToRun > 5000) {
     cyclesToRun = 5000;
@@ -102,16 +102,16 @@ function simulationLoop() {
 function initializeSimulation(hex, graphData) {
   try {
     const flashData = parseIntelHex(hex);
-    
+
     // TODO: Create AVR runner (Implemented in next prompt)
     // avrRunner = new AvrRunner(flashData);
-    
+
     // TODO: Build circuit graph from topology data
     // circuitGraph = buildGraph(graphData);
-    
+
     // TODO: Set up GPIO listeners
     // TODO: Set up serial UART listener
-    
+
     lastHex = hex;
     lastGraphData = graphData;
 
@@ -121,14 +121,14 @@ function initializeSimulation(hex, graphData) {
   }
 }
 
-self.onmessage = function(e) {
+self.onmessage = function (e) {
   const { type, payload } = e.data;
 
   switch (type) {
     case 'INITIALIZE':
       initializeSimulation(payload.hex, payload.graphData);
       break;
-      
+
     case 'START':
       if (simulationLoopTimer) clearTimeout(simulationLoopTimer);
       isRunning = true;
@@ -136,7 +136,9 @@ self.onmessage = function(e) {
       simulationLoop();
       postMessage({ type: 'STATUS', value: 'RUNNING' });
       break;
-      
+
+
+
     case 'PAUSE':
       isRunning = false;
       if (simulationLoopTimer) {
@@ -145,19 +147,19 @@ self.onmessage = function(e) {
       }
       postMessage({ type: 'STATUS', value: 'PAUSED' });
       break;
-      
+
     case 'STOP':
       stopSimulation();
       postMessage({ type: 'STATUS', value: 'IDLE' });
       break;
-      
+
     case 'RESET':
       stopSimulation();
       if (lastHex && lastGraphData) {
         initializeSimulation(lastHex, lastGraphData);
       }
       break;
-      
+
     case 'EXTERNAL_INPUT':
       // Receive componentId, pinId, value
       if (circuitGraph) {
@@ -167,7 +169,7 @@ self.onmessage = function(e) {
         // circuitGraph.repropagate();
       }
       break;
-      
+
     case 'SERIAL_INPUT':
       // Receive text string
       if (avrRunner) {
@@ -179,3 +181,5 @@ self.onmessage = function(e) {
       break;
   }
 };
+
+

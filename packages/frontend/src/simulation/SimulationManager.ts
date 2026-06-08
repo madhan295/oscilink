@@ -5,7 +5,6 @@ class SimulationManager {
   private static instance: SimulationManager;
   private worker: Worker | null = null;
   public initialized: boolean = false;
-  private callbacks: Map<string, Function> = new Map();
 
   private constructor() {
     this.initWorker();
@@ -20,7 +19,10 @@ class SimulationManager {
 
   private initWorker() {
     this.worker = new Worker('/workers/simulation.worker.js', { type: 'module' });
-    
+
+    // ADD THIS LINE:
+    (window as any).__simWorker = this.worker;
+
     this.worker.onmessage = (e: MessageEvent) => {
       this.handleMessage(e.data);
     };
@@ -48,11 +50,13 @@ class SimulationManager {
           store.addSerialLine(payload.text);
         }
         break;
+
       case 'STATUS':
         if (store.setStatus) {
           store.setStatus(payload.value);
         }
         break;
+
       case 'ERROR':
         if (store.setStatus) store.setStatus('ERROR');
         if (store.setErrorMessage) store.setErrorMessage(payload.error);
@@ -60,7 +64,7 @@ class SimulationManager {
         break;
       case 'PIN_CHANGE':
         if (store.setPinVoltage) {
-          store.setPinVoltage(payload.componentId, payload.pinId, payload.voltage);
+          store.setPinVoltage(payload.pinId, payload.voltage);
         }
         break;
     }
