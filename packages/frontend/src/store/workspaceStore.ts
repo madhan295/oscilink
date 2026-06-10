@@ -11,7 +11,7 @@ import {
   PinType,
   ComponentProperties
 } from '../types/components';
-import { SerializedCircuitGraph, GraphNode, GraphEdge } from '../types/simulation';
+import { SerializedCircuitGraph } from '../types/simulation';
 import { CircuitGraph } from '../simulation/engine/CircuitGraph';
 
 interface WorkspaceSnapshot {
@@ -121,7 +121,28 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
       updateComponentPosition: (id, position) => {
         set((state) => {
           const comp = state.components.find(c => c.id === id);
-          if (comp) comp.position = position;
+          if (comp) {
+            comp.position = position;
+            
+            state.wires.forEach(wire => {
+              if (wire.from.componentId === id) {
+                const pin = comp.pins[wire.from.pinId];
+                if (pin) {
+                  // In the future, we need to account for comp.rotation here if pins rotate
+                  wire.points[0] = comp.position.x + pin.position.x;
+                  wire.points[1] = comp.position.y + pin.position.y;
+                }
+              }
+              if (wire.to.componentId === id) {
+                const pin = comp.pins[wire.to.pinId];
+                if (pin) {
+                  const len = wire.points.length;
+                  wire.points[len - 2] = comp.position.x + pin.position.x;
+                  wire.points[len - 1] = comp.position.y + pin.position.y;
+                }
+              }
+            });
+          }
         });
       },
 

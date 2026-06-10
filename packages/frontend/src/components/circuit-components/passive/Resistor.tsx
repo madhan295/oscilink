@@ -37,11 +37,16 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
 
   const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
 
-  const selectedComponentIds = useWorkspaceStore((state) => state.selectedComponentIds);
-  const isSelected = selectedComponentIds.includes(component.id);
-  
+
   const handleDragStart = () => {
     useWorkspaceStore.getState().pushHistory();
+  };
+
+  const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
+    useWorkspaceStore.getState().updateComponentPosition(component.id, {
+      x: e.target.x(),
+      y: e.target.y()
+    });
   };
 
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
@@ -126,18 +131,12 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
       rotation={component.rotation}
       draggable
       onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
       onClick={handleClick}
       onTap={handleClick}
     >
-      {isSelected && (
-        <Rect
-          x={-5} y={-5} width={70} height={35}
-          stroke="#3b82f6" strokeWidth={2} dash={[6, 3]}
-          listening={false}
-        />
-      )}
-
+      <Rect x={-5} y={-5} width={70} height={35} fill="transparent" />
       {/* Leads */}
       <Group listening={false}>
         <Line points={[0, 10, 8, 10]} stroke="#C0C0C0" strokeWidth={2} />
@@ -145,7 +144,7 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
       </Group>
 
       {/* Body */}
-      <Group listening={false} x={8} y={3}>
+      <Group x={8} y={3}>
         <Rect
           x={0} y={0}
           width={44} height={14}

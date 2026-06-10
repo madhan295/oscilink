@@ -13,21 +13,25 @@ interface ArduinoUnoProps {
 
 export const ArduinoUno: React.FC<ArduinoUnoProps> = ({ component }) => {
   const [hoveredPin, setHoveredPin] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const outerGroupRef = useRef<Konva.Group>(null);
 
   const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = useContext(CanvasContext);
 
-  const selectedComponentIds = useWorkspaceStore(state => state.selectedComponentIds);
-  const isSelected = selectedComponentIds.includes(component.id);
+
   const pinVoltages = useSimulationStore(state => state.pinVoltages);
 
   const handleDragStart = () => {
     useWorkspaceStore.getState().pushHistory();
   };
 
+  const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
+    useWorkspaceStore.getState().updateComponentPosition(component.id, {
+      x: e.target.x(),
+      y: e.target.y()
+    });
+  };
+
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
-    setIsDragging(false);
     useWorkspaceStore.getState().updateComponentPosition(component.id, {
       x: e.target.x(),
       y: e.target.y()
@@ -153,6 +157,7 @@ export const ArduinoUno: React.FC<ArduinoUnoProps> = ({ component }) => {
       rotation={component.rotation}
       draggable
       onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
       onClick={handleClick}
       onTap={handleClick}
@@ -162,23 +167,8 @@ export const ArduinoUno: React.FC<ArduinoUnoProps> = ({ component }) => {
         handlePinMouseLeave();
       }}
     >
-      {/* Selection Box */}
-      {isSelected && (
-        <Rect
-          x={-4} y={-4} width={208} height={148}
-          stroke="#3b82f6" strokeWidth={2} dash={[6, 3]}
-          listening={false}
-        />
-      )}
-
-      {/* Drag glow */}
-      {isDragging && (
-        <Rect
-          x={-4} y={-4} width={208} height={148}
-          stroke="#3b82f6" strokeWidth={2} dash={[6, 3]}
-          opacity={0.5} listening={false}
-        />
-      )}
+      {/* Invisible Hitbox */}
+      <Rect x={-4} y={-4} width={208} height={148} fill="transparent" />
 
       {/* ── PCB GRAPHICS (listening={false} on Group propagates to all children) ── */}
       <Group scaleX={sx} scaleY={sy} listening={false}>

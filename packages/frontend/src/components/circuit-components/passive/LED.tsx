@@ -18,9 +18,7 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
 
   const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
 
-  const selectedComponentIds = useWorkspaceStore((state) => state.selectedComponentIds);
-  const isSelected = selectedComponentIds.includes(component.id);
-  
+
   const compState = useSimulationStore((state) => state.componentStates[component.id]);
   const targetBrightness = (compState as { brightness?: number })?.brightness ?? 0;
   
@@ -59,6 +57,13 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
 
   const handleDragStart = () => {
     useWorkspaceStore.getState().pushHistory();
+  };
+
+  const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
+    useWorkspaceStore.getState().updateComponentPosition(component.id, {
+      x: e.target.x(),
+      y: e.target.y()
+    });
   };
 
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
@@ -155,18 +160,12 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
       rotation={component.rotation}
       draggable
       onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
       onClick={handleClick}
       onTap={handleClick}
     >
-      {isSelected && (
-        <Rect
-          x={-5} y={-5} width={50} height={55}
-          stroke="#3b82f6" strokeWidth={2} dash={[6, 3]}
-          listening={false}
-        />
-      )}
-
+      <Rect x={-5} y={-5} width={50} height={55} fill="transparent" />
       {/* Leads */}
       <Group listening={false}>
         <Path data="M 14 20 L 14 25 L 10 25 L 10 38" stroke="#C0C0C0" strokeWidth={2} lineJoin="round" />
@@ -193,7 +192,7 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
 
       {/* LED Body */}
       <Group 
-        listening={false} x={12} y={6}
+        x={12} y={6}
         shadowColor={`rgb(${c.r}, ${c.g}, ${c.b})`}
         shadowBlur={displayedBrightness > 0.05 ? 15 * displayedBrightness : 0}
         shadowOpacity={displayedBrightness}
