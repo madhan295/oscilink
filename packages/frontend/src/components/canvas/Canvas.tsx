@@ -9,6 +9,7 @@ import { WireLayer } from './WireLayer';
 import { ComponentLayer } from './ComponentLayer';
 import { InteractionLayer } from './InteractionLayer';
 import { PinRef } from '../../types/components';
+import { PropertiesPanel } from '../ui/PropertiesPanel';
 
 export const CanvasContext = createContext<{ 
   stopPropagation: (e: any) => void;
@@ -272,6 +273,9 @@ export const Canvas: React.FC<{ rightPanelOpen?: boolean }> = ({ rightPanelOpen 
           </CanvasContext.Provider>
         </Stage>
       )}
+
+      {/* Floating Properties Panel */}
+      <PropertiesPanel rightPanelOpen={rightPanelOpen} />
 
       {/* Zoom Indicator UI Overlay */}
       <div 

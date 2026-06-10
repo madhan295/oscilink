@@ -7,7 +7,7 @@ import {
 import toast from 'react-hot-toast';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { createComponent } from '../../utils/componentFactory';
-import { ComponentType, LEDColor } from '../../types/components';
+import { ComponentType } from '../../types/components';
 
 interface ComponentDef {
   type: ComponentType;
@@ -33,8 +33,8 @@ const CATEGORIES: CategoryDef[] = [
   {
     name: 'Passive Components',
     components: [
-      { type: 'LED', name: 'LED', description: 'Light Emitting Diode', icon: Lightbulb, hasColorSelector: true },
-      { type: 'RESISTOR', name: 'Resistor', description: 'Current limiting resistor', icon: Activity, propertyLabel: '220Ω' },
+      { type: 'LED', name: 'LED', description: 'Light Emitting Diode', icon: Lightbulb },
+      { type: 'RESISTOR', name: 'Resistor', description: 'Current limiting resistor', icon: Activity },
       { type: 'PUSH_BUTTON', name: 'Push Button', description: 'Momentary tactile switch', icon: CircleDot },
       { type: 'POTENTIOMETER', name: 'Potentiometer', description: 'Variable resistor', icon: ToggleLeft }
     ]
@@ -63,12 +63,9 @@ const CATEGORIES: CategoryDef[] = [
   }
 ];
 
-const LED_COLORS: LEDColor[] = ['red', 'green', 'blue', 'yellow', 'white'];
-
 export const ComponentPalette: React.FC = () => {
   const [search, setSearch] = useState('');
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
-  const [ledColor, setLedColor] = useState<LEDColor>('red');
 
   const [dragState, setDragState] = useState<{
     isDragging: boolean;
@@ -135,10 +132,8 @@ export const ComponentPalette: React.FC = () => {
 
             try {
               const comp = createComponent(dragState.type, { x: worldX, y: worldY });
-              if (dragState.type === 'LED') {
-                comp.properties.color = ledColor;
-              }
               useWorkspaceStore.getState().addComponent(comp);
+              useWorkspaceStore.getState().selectComponent(comp.id, false);
               toast.success(`Added ${dragState.name}`);
             } catch (err: any) {
               toast.error(err.message || 'Failed to add component');
@@ -156,7 +151,7 @@ export const ComponentPalette: React.FC = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [dragState, ledColor]);
+  }, [dragState]);
 
   const filteredCategories = CATEGORIES.map(cat => ({
     ...cat,
@@ -231,29 +226,7 @@ export const ComponentPalette: React.FC = () => {
                         <div className="flex-1 min-w-0">
                           <h3 className="text-sm font-medium text-primary truncate">{comp.name}</h3>
                           <p className="text-xs text-text-muted truncate mt-0.5">{comp.description}</p>
-
-                          {comp.hasColorSelector && (
-                            <div className="flex gap-1.5 mt-2" onMouseDown={e => e.stopPropagation()}>
-                              {LED_COLORS.map(color => (
-                                <button
-                                  key={color}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setLedColor(color);
-                                  }}
-                                  className={`w-3.5 h-3.5 rounded-full cursor-pointer transition-shadow ${ledColor === color ? 'ring-2 ring-white ring-offset-1 ring-offset-surface' : ''}`}
-                                  style={{ backgroundColor: color }}
-                                  title={`${color} LED`}
-                                />
-                              ))}
-                            </div>
-                          )}
                         </div>
-                        {comp.propertyLabel && (
-                          <div className="text-[10px] font-mono text-text-muted bg-[#181818] px-1.5 py-0.5 rounded align-self-end mt-auto">
-                            {comp.propertyLabel}
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>

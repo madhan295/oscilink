@@ -64,11 +64,14 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
   const bands = getResistorBands(resistance);
 
   let resistanceLabel = `${resistance}Ω`;
-  if (resistance >= 1000 && resistance < 1000000) {
-    resistanceLabel = `${resistance / 1000}kΩ`;
-  } else if (resistance >= 1000000) {
-    resistanceLabel = `${resistance / 1000000}MΩ`;
-  }
+  if (resistance >= 1e9) resistanceLabel = `${Number((resistance / 1e9).toPrecision(5))}GΩ`;
+  else if (resistance >= 1e6) resistanceLabel = `${Number((resistance / 1e6).toPrecision(5))}MΩ`;
+  else if (resistance >= 1e3) resistanceLabel = `${Number((resistance / 1e3).toPrecision(5))}kΩ`;
+  else if (resistance >= 1) resistanceLabel = `${Number(resistance.toPrecision(5))}Ω`;
+  else if (resistance >= 1e-3) resistanceLabel = `${Number((resistance / 1e-3).toPrecision(5))}mΩ`;
+  else if (resistance >= 1e-6) resistanceLabel = `${Number((resistance / 1e-6).toPrecision(5))}µΩ`;
+  else if (resistance >= 1e-9) resistanceLabel = `${Number((resistance / 1e-9).toPrecision(5))}nΩ`;
+  else if (resistance > 0) resistanceLabel = `${Number((resistance / 1e-12).toPrecision(5))}pΩ`;
 
   const renderPins = () => {
     return Object.values(component.pins).map((pin) => {

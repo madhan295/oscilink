@@ -177,13 +177,14 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
       {displayedBrightness > 0.05 && (
         <Circle
           x={20} y={14}
-          radius={16}
+          radius={32}
           fillRadialGradientStartPoint={{ x: 0, y: 0 }}
           fillRadialGradientStartRadius={0}
           fillRadialGradientEndPoint={{ x: 0, y: 0 }}
-          fillRadialGradientEndRadius={16}
+          fillRadialGradientEndRadius={32}
           fillRadialGradientColorStops={[
-            0, `rgba(${c.r}, ${c.g}, ${c.b}, ${0.6 * displayedBrightness})`,
+            0, `rgba(${c.r}, ${c.g}, ${c.b}, ${0.9 * displayedBrightness})`,
+            0.4, `rgba(${c.r}, ${c.g}, ${c.b}, ${0.4 * displayedBrightness})`,
             1, 'rgba(0, 0, 0, 0)'
           ]}
           listening={false}
@@ -191,7 +192,12 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
       )}
 
       {/* LED Body */}
-      <Group listening={false} x={12} y={6}>
+      <Group 
+        listening={false} x={12} y={6}
+        shadowColor={`rgb(${c.r}, ${c.g}, ${c.b})`}
+        shadowBlur={displayedBrightness > 0.05 ? 15 * displayedBrightness : 0}
+        shadowOpacity={displayedBrightness}
+      >
         {/* Dome */}
         <Path
           data="M 0 8 A 8 8 0 0 1 16 8 Z"

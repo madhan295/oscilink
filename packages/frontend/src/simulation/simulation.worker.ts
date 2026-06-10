@@ -16,7 +16,16 @@ import {
 import { CircuitGraph, calculateLEDState, calculateBuzzerState, calculateServoState } from './engine/CircuitGraph';
 
 class AVRRunner {
-  constructor(flashData) {
+  cpu: CPU;
+  timer0: AVRTimer;
+  timer1: AVRTimer;
+  timer2: AVRTimer;
+  portB: AVRIOPort;
+  portC: AVRIOPort;
+  portD: AVRIOPort;
+  usart: AVRUSART;
+
+  constructor(flashData: Uint8Array) {
     const program = new Uint16Array(flashData.buffer);
     this.cpu = new CPU(program);
     this.timer0 = new AVRTimer(this.cpu, timer0Config);
@@ -29,22 +38,22 @@ class AVRRunner {
   }
 }
 
-let avrRunner = null;
-let circuitGraph = null;
-let simulationLoopTimer = null;
+let avrRunner: AVRRunner | null = null;
+let circuitGraph: CircuitGraph | null = null;
+let simulationLoopTimer: NodeJS.Timeout | null = null;
 let isRunning = false;
 let serialBuffer = "";
-let pendingUpdates = {};
+let pendingUpdates: Record<string, any> = {};
 
-let lastHex = null;
-let lastGraphData = null;
+let lastHex: string | null = null;
+let lastGraphData: any = null;
 let lastTickTime = 0;
 
 let lastPortB = 0;
 let lastPortC = 0;
 let lastPortD = 0;
 
-function parseIntelHex(hexString) {
+function parseIntelHex(hexString: string): Uint8Array {
   const flash = new Uint8Array(32768);
   flash.fill(0xFF);
   const lines = hexString.split(/\r?\n/);
@@ -99,7 +108,6 @@ function stopSimulation() {
   pendingUpdates = {};
 }
 
-let totalCycles = 0;
 
 function simulationLoop() {
   if (!isRunning) return;
@@ -110,8 +118,8 @@ function simulationLoop() {
 
   let cyclesToRun = Math.floor(elapsed * 16000);
 
-  if (cyclesToRun > 500000) {
-    cyclesToRun = 500000;
+  if (cyclesToRun > 16000000) {
+    cyclesToRun = 16000000;
   }
 
   if (avrRunner) {
@@ -125,7 +133,7 @@ function simulationLoop() {
   simulationLoopTimer = setTimeout(simulationLoop, 16);
 }
 
-function queueComponentUpdate(componentId, state) {
+function queueComponentUpdate(componentId: string, state: any) {
   if (!pendingUpdates[componentId]) {
     pendingUpdates[componentId] = {};
   }
@@ -139,7 +147,7 @@ function flushUpdates() {
   }
 }
 
-function handlePinChange(pinName, voltage) {
+function handlePinChange(pinName: string, voltage: number) {
   // Always notify UI for Arduino visual pins
   postMessage({ type: 'PIN_CHANGE', payload: { componentId: 'arduino-uno', pinId: pinName, voltage } });
 
@@ -149,32 +157,32 @@ function handlePinChange(pinName, voltage) {
     for (const [id, comp] of circuitGraph.components.entries()) {
       if (comp.type === 'ARDUINO_UNO') { arduinoId = id; break; }
     }
-    
+
     if (arduinoId) {
       const nodeId = `${arduinoId}.${pinName}`;
       // 2. Propagate
       circuitGraph.propagateVoltage(nodeId, voltage);
-      
+
       // 3. Update all components that might have changed
       for (const [id, comp] of circuitGraph.components.entries()) {
         if (comp.type === 'LED') {
-           const state = calculateLEDState(comp, circuitGraph);
-           queueComponentUpdate(id, state);
+          const state = calculateLEDState(comp, circuitGraph);
+          queueComponentUpdate(id, state);
         } else if (comp.type === 'BUZZER') {
-           const state = calculateBuzzerState(comp, circuitGraph);
-           queueComponentUpdate(id, state);
+          const state = calculateBuzzerState(comp, circuitGraph);
+          queueComponentUpdate(id, state);
         } else if (comp.type === 'SERVO') {
-           // We might need to handle servo differently if it relies on PWM history, but for now:
-           // We'll leave Servo out of this loop or handle it if needed.
+          // We might need to handle servo differently if it relies on PWM history, but for now:
+          // We'll leave Servo out of this loop or handle it if needed.
         }
       }
     }
   }
 }
 
-function handlePWMChange(pinName, dutyCycle) {
+function handlePWMChange(pinName: string, dutyCycle: number) {
   handlePinChange(pinName, dutyCycle * 5.0);
-  
+
   if (circuitGraph) {
     let arduinoId = null;
     for (const [id, comp] of circuitGraph.components.entries()) {
@@ -183,18 +191,18 @@ function handlePWMChange(pinName, dutyCycle) {
     if (arduinoId) {
       for (const [id, comp] of circuitGraph.components.entries()) {
         if (comp.type === 'SERVO') {
-           // Check if this servo is attached to this pin
-           if (circuitGraph.findPath(`${arduinoId}.${pinName}`, `${id}.pwm`)) {
-             const state = calculateServoState(dutyCycle);
-             queueComponentUpdate(id, state);
-           }
+          // Check if this servo is attached to this pin
+          if (circuitGraph.findPath(`${arduinoId}.${pinName}`, `${id}.pwm`)) {
+            const state = calculateServoState(dutyCycle);
+            queueComponentUpdate(id, state);
+          }
         }
       }
     }
   }
 }
 
-export function setAnalogInputVoltage(channel, voltage) {
+export function setAnalogInputVoltage(channel: number, voltage: number) {
   if (!avrRunner) return;
   // ADMUX is at 0x7C
   const admux = avrRunner.cpu.data[0x7C];
@@ -207,10 +215,10 @@ export function setAnalogInputVoltage(channel, voltage) {
   }
 }
 
-function initializeSimulation(hex, graphData) {
+function initializeSimulation(hex: string, graphData: any) {
   try {
     const flashData = parseIntelHex(hex);
-    
+
     avrRunner = new AVRRunner(flashData);
 
     // Reset previous port states
@@ -222,23 +230,23 @@ function initializeSimulation(hex, graphData) {
     circuitGraph = new CircuitGraph();
     if (graphData) {
       circuitGraph.loadSerialized(graphData);
-      
+
       // Seed initial ground and power pins for any arduinos
       for (const [nodeId, node] of circuitGraph.nodes.entries()) {
         const comp = circuitGraph.components.get(node.componentId);
         if (comp && comp.type === 'ARDUINO_UNO') {
           if (node.pinType === 'power') {
-              const v = nodeId.includes('3V3') ? 3.3 : 5.0;
-              circuitGraph.propagateVoltage(nodeId, v);
+            const v = nodeId.includes('3V3') ? 3.3 : 5.0;
+            circuitGraph.propagateVoltage(nodeId, v);
           } else if (node.pinType === 'ground') {
-              circuitGraph.propagateVoltage(nodeId, 0.0);
+            circuitGraph.propagateVoltage(nodeId, 0.0);
           }
         }
       }
     }
 
     // PORT LISTENERS
-    avrRunner.portB.addListener((value) => {
+    avrRunner.portB.addListener((value: number) => {
       for (let bit = 0; bit < 6; bit++) {
         const isHigh = (value & (1 << bit)) !== 0;
         const wasHigh = (lastPortB & (1 << bit)) !== 0;
@@ -256,7 +264,7 @@ function initializeSimulation(hex, graphData) {
       lastPortB = value;
     });
 
-    avrRunner.portC.addListener((value) => {
+    avrRunner.portC.addListener((value: number) => {
       for (let bit = 0; bit < 6; bit++) {
         const isHigh = (value & (1 << bit)) !== 0;
         const wasHigh = (lastPortC & (1 << bit)) !== 0;
@@ -268,7 +276,7 @@ function initializeSimulation(hex, graphData) {
       lastPortC = value;
     });
 
-    avrRunner.portD.addListener((value) => {
+    avrRunner.portD.addListener((value: number) => {
       for (let bit = 0; bit < 8; bit++) {
         const isHigh = (value & (1 << bit)) !== 0;
         const wasHigh = (lastPortD & (1 << bit)) !== 0;
@@ -281,7 +289,7 @@ function initializeSimulation(hex, graphData) {
     });
 
     // SERIAL UART SETUP
-    avrRunner.usart.onByteTransmit = (value) => {
+    avrRunner.usart.onByteTransmit = (value: number) => {
       serialBuffer += String.fromCharCode(value);
       if (value === 10 || serialBuffer.length >= 128) {
         postMessage({ type: 'SERIAL_OUTPUT', payload: { text: serialBuffer } });
@@ -291,19 +299,19 @@ function initializeSimulation(hex, graphData) {
 
     // PWM DETECTION
     // OCR1AL (0x8A), OCR1AH (0x8B) -> D9
-    avrRunner.cpu.writeHooks[0x8A] = (value) => { handlePWMChange('D9', value / 255.0); return false; };
+    avrRunner.cpu.writeHooks[0x8A] = (value: number) => { handlePWMChange('D9', value / 255.0); return false; };
     // OCR1BL (0x88), OCR1BH (0x89) -> D10
-    avrRunner.cpu.writeHooks[0x88] = (value) => { handlePWMChange('D10', value / 255.0); return false; };
+    avrRunner.cpu.writeHooks[0x88] = (value: number) => { handlePWMChange('D10', value / 255.0); return false; };
     // OCR2A (0xB3) -> D11
-    avrRunner.cpu.writeHooks[0xB3] = (value) => { handlePWMChange('D11', value / 255.0); return false; };
+    avrRunner.cpu.writeHooks[0xB3] = (value: number) => { handlePWMChange('D11', value / 255.0); return false; };
     // OCR2B (0xB4) -> D3
-    avrRunner.cpu.writeHooks[0xB4] = (value) => { handlePWMChange('D3', value / 255.0); return false; };
+    avrRunner.cpu.writeHooks[0xB4] = (value: number) => { handlePWMChange('D3', value / 255.0); return false; };
 
     lastHex = hex;
     lastGraphData = graphData;
 
     postMessage({ type: 'STATUS', value: 'READY' });
-  } catch (error) {
+  } catch (error: any) {
     postMessage({ type: 'ERROR', error: error ? (error.message || String(error)) : 'Unknown error' });
   }
 }

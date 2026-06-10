@@ -32,11 +32,11 @@ class SimulationManager {
       console.error('FULL WORKER ERROR:', e);
       const store = useSimulationStore.getState();
       if (store.setStatus) store.setStatus('ERROR');
-      
+
       let errMsg = 'Unknown Worker Error';
       if (e.message) errMsg = e.message;
       else if (e.error && e.error.message) errMsg = e.error.message;
-      
+
       if (store.setErrorMessage) store.setErrorMessage(errMsg);
       toast.error(`Worker crash: ${errMsg}`);
     };
@@ -67,7 +67,12 @@ class SimulationManager {
         break;
       case 'SERIAL_OUTPUT':
         if (store.addSerialLine && payload.text) {
-          store.addSerialLine(payload.text);
+          store.addSerialLine({
+            id: crypto.randomUUID(),
+            text: payload.text,
+            timestamp: Date.now(),
+            type: 'output'
+          });
         }
         break;
 
