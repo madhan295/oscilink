@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useWorkspaceStore } from '../store/workspaceStore';
 import { PinRef, Point } from '../types/components';
+import { getAbsolutePinPosition } from '../utils/geometry';
 
 export const useWireDrawing = () => {
   const [previewWirePoints, setPreviewWirePoints] = useState<number[] | null>(null);
@@ -24,9 +25,8 @@ export const useWireDrawing = () => {
       const comp = components.find(c => c.id === pinRef.componentId);
       const pin = comp?.pins[pinRef.pinId];
       if (comp && pin) {
-        const absX = comp.position.x + pin.position.x;
-        const absY = comp.position.y + pin.position.y;
-        setPreviewWirePoints([absX, absY, absX, absY]);
+        const absPos = getAbsolutePinPosition(comp, pin);
+        setPreviewWirePoints([absPos.x, absPos.y, absPos.x, absPos.y]);
       }
     } else {
       if (wireDrawingFrom?.componentId !== pinRef.componentId || wireDrawingFrom?.pinId !== pinRef.pinId) {
@@ -40,16 +40,14 @@ export const useWireDrawing = () => {
             const endPin = endComp?.pins[pinRef.pinId];
             
             if (startComp && startPin && endComp && endPin) {
-              const startX = startComp.position.x + startPin.position.x;
-              const startY = startComp.position.y + startPin.position.y;
-              const endX = endComp.position.x + endPin.position.x;
-              const endY = endComp.position.y + endPin.position.y;
+              const startPos = getAbsolutePinPosition(startComp, startPin);
+              const endPos = getAbsolutePinPosition(endComp, endPin);
               
-              const points = [startX, startY];
+              const points = [startPos.x, startPos.y];
               intermediatePoints.forEach(p => {
                 points.push(p.x, p.y);
               });
-              points.push(endX, endY);
+              points.push(endPos.x, endPos.y);
               
               finishWireDrawing(pinRef, points);
             } else {
@@ -88,8 +86,7 @@ export const useWireDrawing = () => {
       const startComp = components.find(c => c.id === wireDrawingFrom.componentId);
       const startPin = startComp?.pins[wireDrawingFrom.pinId];
       if (startComp && startPin) {
-        const startX = startComp.position.x + startPin.position.x;
-        const startY = startComp.position.y + startPin.position.y;
+        const startPos = getAbsolutePinPosition(startComp, startPin);
         
         let endX = worldPoint.x;
         let endY = worldPoint.y;
@@ -98,12 +95,13 @@ export const useWireDrawing = () => {
            const endComp = components.find(c => c.id === hoveredPin.componentId);
            const pin = endComp?.pins[hoveredPin.pinId];
            if (endComp && pin) {
-             endX = endComp.position.x + pin.position.x;
-             endY = endComp.position.y + pin.position.y;
+             const endPos = getAbsolutePinPosition(endComp, pin);
+             endX = endPos.x;
+             endY = endPos.y;
            }
         }
 
-        const points = [startX, startY];
+        const points = [startPos.x, startPos.y];
         intermediatePoints.forEach(p => {
           points.push(p.x, p.y);
         });

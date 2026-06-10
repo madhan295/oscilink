@@ -156,14 +156,21 @@ export const InteractionLayer: React.FC = () => {
       {/* Component Selection Outlines */}
       {selectedComponents.map(comp => {
         const bounds = getComponentBounds(comp);
-        const selX = bounds.x - 8;
-        const selY = bounds.y - 8;
+        const localX = bounds.x - comp.position.x;
+        const localY = bounds.y - comp.position.y;
+        const selX = localX - 8;
+        const selY = localY - 8;
         const selW = bounds.width + 16;
         const selH = bounds.height + 16;
         const strokeW = 2 / viewport.scale;
 
         return (
-          <Group key={`sel-${comp.id}`} x={0} y={0} rotation={comp.rotation} offsetX={comp.rotation ? -comp.position.x : 0} offsetY={comp.rotation ? -comp.position.y : 0}>
+          <Group 
+            key={`sel-${comp.id}`} 
+            x={comp.position.x} 
+            y={comp.position.y} 
+            rotation={comp.rotation || 0}
+          >
             <Rect
               x={selX} y={selY}
               width={selW} height={selH}

@@ -8,11 +8,11 @@ import {
   Point,
   PinRef,
   WireColor,
-  PinType,
   ComponentProperties
 } from '../types/components';
 import { SerializedCircuitGraph } from '../types/simulation';
 import { CircuitGraph } from '../simulation/engine/CircuitGraph';
+import { getAbsolutePinPosition } from '../utils/geometry';
 
 interface WorkspaceSnapshot {
   components: CircuitComponent[];
@@ -61,11 +61,7 @@ interface WorkspaceActions {
 
 type WorkspaceStore = WorkspaceState & WorkspaceActions;
 
-const determineWireColor = (type1?: PinType, type2?: PinType): WireColor => {
-  if (type1 === 'power' || type2 === 'power') return 'red';
-  if (type1 === 'ground' || type2 === 'ground') return 'black';
-  return 'blue';
-};
+
 
 export const useWorkspaceStore = create<WorkspaceStore>()(
   devtools(
@@ -128,17 +124,18 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
               if (wire.from.componentId === id) {
                 const pin = comp.pins[wire.from.pinId];
                 if (pin) {
-                  // In the future, we need to account for comp.rotation here if pins rotate
-                  wire.points[0] = comp.position.x + pin.position.x;
-                  wire.points[1] = comp.position.y + pin.position.y;
+                  const absPos = getAbsolutePinPosition(comp, pin);
+                  wire.points[0] = absPos.x;
+                  wire.points[1] = absPos.y;
                 }
               }
               if (wire.to.componentId === id) {
                 const pin = comp.pins[wire.to.pinId];
                 if (pin) {
                   const len = wire.points.length;
-                  wire.points[len - 2] = comp.position.x + pin.position.x;
-                  wire.points[len - 1] = comp.position.y + pin.position.y;
+                  const absPos = getAbsolutePinPosition(comp, pin);
+                  wire.points[len - 2] = absPos.x;
+                  wire.points[len - 1] = absPos.y;
                 }
               }
             });
@@ -170,11 +167,7 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
           const fromComp = state.components.find(c => c.id === wire.from.componentId);
           const toComp = state.components.find(c => c.id === wire.to.componentId);
           
-          const fromPinType = fromComp?.pins[wire.from.pinId]?.type;
-          const toPinType = toComp?.pins[wire.to.pinId]?.type;
-          
-          wire.color = determineWireColor(fromPinType, toPinType);
-          
+
           if (fromComp?.pins[wire.from.pinId]) {
             fromComp.pins[wire.from.pinId].connectedWireIds.push(wire.id);
           }
@@ -284,20 +277,13 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
         const state = get();
         if (!state.wireDrawingFrom) return;
         
-        const fromComp = state.components.find(c => c.id === state.wireDrawingFrom!.componentId);
-        const toComp = state.components.find(c => c.id === target.componentId);
-        
-        const fromPinType = fromComp?.pins[state.wireDrawingFrom.pinId]?.type;
-        const toPinType = toComp?.pins[target.pinId]?.type;
-        
-        const wireColor = determineWireColor(fromPinType, toPinType);
-        
+
         const newWire: Wire = {
           id: uuidv4(),
           from: state.wireDrawingFrom,
           to: target,
           points,
-          color: wireColor,
+          color: 'blue',
           isSelected: false,
           isError: false
         };
