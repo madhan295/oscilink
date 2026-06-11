@@ -314,15 +314,25 @@ function initializeSimulation(hex: string, graphData: any) {
       }
     };
 
-    // PWM DETECTION
-    // OCR1AL (0x8A), OCR1AH (0x8B) -> D9
-    avrRunner.cpu.writeHooks[0x8A] = (value: number) => { if (avrRunner!.cpu.data[0x80] & 0x80) handlePWMChange('D9', value / 255.0); return false; };
-    // OCR1BL (0x88), OCR1BH (0x89) -> D10
-    avrRunner.cpu.writeHooks[0x88] = (value: number) => { if (avrRunner!.cpu.data[0x80] & 0x20) handlePWMChange('D10', value / 255.0); return false; };
-    // OCR2A (0xB3) -> D11
-    avrRunner.cpu.writeHooks[0xB3] = (value: number) => { if (avrRunner!.cpu.data[0xB0] & 0x80) handlePWMChange('D11', value / 255.0); return false; };
-    // OCR2B (0xB4) -> D3
-    avrRunner.cpu.writeHooks[0xB4] = (value: number) => { if (avrRunner!.cpu.data[0xB0] & 0x20) handlePWMChange('D3', value / 255.0); return false; };
+    const attachPWMHook = (addr: number, pinName: string, bitMask: number, tccrAddr: number) => {
+      const origHook = avrRunner!.cpu.writeHooks[addr];
+      avrRunner!.cpu.writeHooks[addr] = (value: number, oldValue: number, addrArgs: number, mask: number) => {
+        const handled = origHook ? origHook(value, oldValue, addrArgs, mask) : false;
+        if (avrRunner!.cpu.data[tccrAddr] & bitMask) {
+          handlePWMChange(pinName, value / 255.0);
+        }
+        return handled;
+      };
+    };
+
+    // OCR1AL (0x8A) -> D9, TCCR1A (0x80) bit 7
+    attachPWMHook(0x8A, 'D9', 0x80, 0x80);
+    // OCR1BL (0x88) -> D10, TCCR1A (0x80) bit 5
+    attachPWMHook(0x88, 'D10', 0x20, 0x80);
+    // OCR2A (0xB3) -> D11, TCCR2A (0xB0) bit 7
+    attachPWMHook(0xB3, 'D11', 0x80, 0xB0);
+    // OCR2B (0xB4) -> D3, TCCR2A (0xB0) bit 5
+    attachPWMHook(0xB4, 'D3', 0x20, 0xB0);
 
     lastHex = hex;
     lastGraphData = graphData;
