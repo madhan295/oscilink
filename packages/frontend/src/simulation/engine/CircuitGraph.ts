@@ -518,8 +518,8 @@ export function calculateServoState(lastDutyCycle: number, minPulse = 544, maxPu
 }
 
 export function calculateBuzzerState(buzzerComponent: GraphComponent, graph: CircuitGraph): BuzzerState {
-  const vPositive = graph.getNodeVoltage(buzzerComponent.id, 'positive');
-  const vNegative = graph.getNodeVoltage(buzzerComponent.id, 'negative');
+  const vPositive = graph.getNodeVoltage(buzzerComponent.id, 'POSITIVE');
+  const vNegative = graph.getNodeVoltage(buzzerComponent.id, 'NEGATIVE');
   
   const isActive = (vPositive - vNegative) > 2.0;
   

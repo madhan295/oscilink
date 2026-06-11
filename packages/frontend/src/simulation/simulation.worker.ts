@@ -16,6 +16,7 @@ import {
 } from 'avr8js';
 
 import { CircuitGraph, calculateLEDState, calculateBuzzerState, calculateServoState } from './engine/CircuitGraph';
+import { HD44780 } from './engine/HD44780';
 
 class AVRRunner {
   cpu: CPU;
@@ -49,6 +50,7 @@ let isRunning = false;
 let serialBuffer = "";
 let pendingUpdates: Record<string, any> = {};
 const pinHighTicks: Record<string, number> = {};
+const lcdControllers: Record<string, HD44780> = {};
 
 let lastHex: string | null = null;
 let lastGraphData: any = null;
@@ -110,6 +112,7 @@ function stopSimulation() {
   circuitGraph = null;
   pendingUpdates = {};
   for (const key in pinHighTicks) delete pinHighTicks[key];
+  for (const key in lcdControllers) delete lcdControllers[key];
 }
 
 
@@ -177,6 +180,35 @@ function handlePinChange(pinName: string, voltage: number) {
           queueComponentUpdate(id, state);
         } else if (comp.type === 'SERVO_MOTOR') {
           // Servos are updated by pulse width measurement, not directly by voltage
+        } else if (comp.type === 'LCD_16X2') {
+          if (!lcdControllers[id]) {
+            lcdControllers[id] = new HD44780();
+          }
+          const rs = circuitGraph.getNodeVoltage(id, 'RS') > 2.5;
+          const rw = circuitGraph.getNodeVoltage(id, 'RW') > 2.5;
+          const e = circuitGraph.getNodeVoltage(id, 'E') > 2.5;
+          const d4 = circuitGraph.getNodeVoltage(id, 'D4') > 2.5 ? 1 : 0;
+          const d5 = circuitGraph.getNodeVoltage(id, 'D5') > 2.5 ? 1 : 0;
+          const d6 = circuitGraph.getNodeVoltage(id, 'D6') > 2.5 ? 1 : 0;
+          const d7 = circuitGraph.getNodeVoltage(id, 'D7') > 2.5 ? 1 : 0;
+          const a = circuitGraph.getNodeVoltage(id, 'A') > 2.5;
+
+          const dataNibble = (d7 << 3) | (d6 << 2) | (d5 << 1) | d4;
+          
+          const lcd = lcdControllers[id];
+          const oldLastEnable = lcd.lastEnable;
+          
+          lcd.processPins(rs, rw, e, dataNibble, a);
+          
+          if (oldLastEnable !== lcd.lastEnable) {
+            queueComponentUpdate(id, { 
+              rows: lcd.rows, 
+              cursorRow: lcd.cursorRow, 
+              cursorCol: lcd.cursorCol,
+              backlight: lcd.backlight,
+              cursorVisible: lcd.cursorOn || lcd.blinkOn
+            });
+          }
         }
       }
 
