@@ -91,6 +91,17 @@ class SimulationManager {
         if (store.setErrorMessage) store.setErrorMessage(payload.error);
         toast.error(`Simulation Error: ${payload.error}`);
         break;
+
+      case 'ULTRASONIC_ECHO':
+        // Store the simulated distance so the UI can display it
+        if (store.updateComponentState) {
+          store.updateComponentState(payload.sensorId, {
+            distanceCm: payload.distanceCm,
+            durationUs: payload.durationUs,
+            isActive: true
+          });
+        }
+        break;
       case 'PIN_CHANGE':
         console.log('PIN_CHANGE received!', payload);
         if (store.setPinVoltage) {
@@ -139,6 +150,13 @@ class SimulationManager {
 
   public updateComponentProperties(componentId: string, properties: any) {
     this.worker?.postMessage({ type: 'UPDATE_PROPERTIES', payload: { componentId, properties } });
+  }
+
+  public setSimulatedDistance(distanceCm: number) {
+    this.worker?.postMessage({
+      type: 'SET_SENSOR_DISTANCE',
+      payload: { distanceCm }
+    });
   }
 
   public destroy() {

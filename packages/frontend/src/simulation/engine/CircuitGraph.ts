@@ -275,7 +275,7 @@ export class CircuitGraph {
       if (node) {
         // Add all other pins of the SAME component as valid paths, EXCEPT for power supplies/microcontrollers and switches!
         const comp = this.components.get(node.componentId);
-        if (comp && comp.pins && !['ARDUINO_UNO', 'BATTERY', 'PUSH_BUTTON', 'SWITCH'].includes(comp.type)) {
+        if (comp && comp.pins && !['ARDUINO_UNO', 'BATTERY', 'PUSH_BUTTON', 'SWITCH', 'ULTRASONIC_SENSOR'].includes(comp.type)) {
           for (const pin of comp.pins) {
             if (pin.id !== node.pinId) {
               const internalNeighborId = `${comp.id}.${pin.id}`;
@@ -317,7 +317,7 @@ export class CircuitGraph {
         }
 
         const comp = this.components.get(node.componentId);
-        if (comp && comp.pins && !['ARDUINO_UNO', 'BATTERY', 'PUSH_BUTTON', 'SWITCH', 'LED'].includes(comp.type)) {
+        if (comp && comp.pins && !['ARDUINO_UNO', 'BATTERY', 'PUSH_BUTTON', 'SWITCH', 'LED', 'ULTRASONIC_SENSOR'].includes(comp.type)) {
           for (const pin of comp.pins) {
             if (pin.id !== node.pinId) {
               const internalNeighborId = `${comp.id}.${pin.id}`;
@@ -362,7 +362,7 @@ export class CircuitGraph {
         }
 
         const comp = this.components.get(node.componentId);
-        if (comp && comp.pins && !['ARDUINO_UNO', 'BATTERY', 'PUSH_BUTTON', 'SWITCH', 'LED'].includes(comp.type)) {
+        if (comp && comp.pins && !['ARDUINO_UNO', 'BATTERY', 'PUSH_BUTTON', 'SWITCH', 'LED', 'ULTRASONIC_SENSOR'].includes(comp.type)) {
           for (const pin of comp.pins) {
             if (pin.id !== node.pinId) {
               const internalNeighborId = `${comp.id}.${pin.id}`;
@@ -404,7 +404,7 @@ export class CircuitGraph {
 
         // Add all other pins of the SAME component as valid paths, EXCEPT for power supplies/microcontrollers and switches!
         const comp = this.components.get(node.componentId);
-        if (comp && comp.pins && !['ARDUINO_UNO', 'BATTERY', 'PUSH_BUTTON', 'SWITCH'].includes(comp.type)) {
+        if (comp && comp.pins && !['ARDUINO_UNO', 'BATTERY', 'PUSH_BUTTON', 'SWITCH', 'ULTRASONIC_SENSOR'].includes(comp.type)) {
           for (const pin of comp.pins) {
             if (pin.id !== node.pinId) {
               const internalNeighborId = `${comp.id}.${pin.id}`;

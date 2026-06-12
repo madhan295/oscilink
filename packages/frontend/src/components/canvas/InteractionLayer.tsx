@@ -24,15 +24,19 @@ export const getComponentBounds = (comp: CircuitComponent) => {
       width = 50; height = 50; offsetX = -5; offsetY = -5;
       break;
     case 'POTENTIOMETER':
-    case 'SERVO_MOTOR':
       width = 60; height = 60; offsetX = -5; offsetY = -5;
       break;
+    case 'SERVO_MOTOR':
+      width = 60; height = 86; offsetX = -5; offsetY = -42;
+      break;
     case 'BUZZER':
+      width = 64; height = 72; offsetX = -12; offsetY = -32;
+      break;
     case 'TEMPERATURE_SENSOR':
       width = 50; height = 50; offsetX = -5; offsetY = -5;
       break;
     case 'LCD_16X2':
-      width = 176; height = 72; offsetX = -12; offsetY = -72;
+      width = 176; height = 92; offsetX = -12; offsetY = -72;
       break;
     case 'ULTRASONIC_SENSOR':
       width = 104; height = 58; offsetX = -52; offsetY = -58;

@@ -7,6 +7,7 @@ import { BottomPanel } from './components/editor/BottomPanel';
 import { Toaster } from 'react-hot-toast';
 import { useState, useRef } from 'react';
 import { Toolbar } from './components/ui/Toolbar';
+import { SensorDistanceControl } from './components/ui/SensorDistanceControl';
 
 function App() {
   useKeyboardShortcuts();
@@ -56,8 +57,11 @@ function App() {
           </div>
         </div>
       </div>
+      
+      <SensorDistanceControl />
     </div>
   );
 }
 
 export default App;
+

@@ -52,6 +52,37 @@ let pendingUpdates: Record<string, any> = {};
 const pinHighTicks: Record<string, number> = {};
 const lcdControllers: Record<string, HD44780> = {};
 
+// Simulated distance for ultrasonic sensor (in cm)
+let simulatedDistanceCm = 50;
+
+// Track TRIG pin state per sensor component
+const trigState: Record<string, boolean> = {};
+
+// Queue for precise hardware pin toggles
+const scheduledPinToggles: Array<{
+  cpuCycle: number;
+  pinName: string;
+  state: boolean;
+}> = [];
+let nextToggleCycle = Infinity;
+
+function setArduinoPin(pinName: string, state: boolean) {
+  if (!avrRunner) return;
+  if (pinName.startsWith('D')) {
+    const pinNum = parseInt(pinName.substring(1), 10);
+    if (pinNum >= 0 && pinNum <= 7) {
+      avrRunner.portD.setPin(pinNum, state);
+    } else if (pinNum >= 8 && pinNum <= 13) {
+      avrRunner.portB.setPin(pinNum - 8, state);
+    }
+  } else if (pinName.startsWith('A')) {
+    const pinNum = parseInt(pinName.substring(1), 10);
+    if (pinNum >= 0 && pinNum <= 5) {
+      avrRunner.portC.setPin(pinNum, state);
+    }
+  }
+}
+
 let lastHex: string | null = null;
 let lastGraphData: any = null;
 let lastTickTime = 0;
@@ -111,6 +142,8 @@ function stopSimulation() {
   avrRunner = null;
   circuitGraph = null;
   pendingUpdates = {};
+  scheduledPinToggles.length = 0;
+  nextToggleCycle = Infinity;
   for (const key in pinHighTicks) delete pinHighTicks[key];
   for (const key in lcdControllers) delete lcdControllers[key];
 }
@@ -131,6 +164,21 @@ function simulationLoop() {
 
   if (avrRunner) {
     for (let i = 0; i < cyclesToRun; i++) {
+      if (avrRunner.cpu.cycles >= nextToggleCycle) {
+        nextToggleCycle = Infinity;
+        for (let j = scheduledPinToggles.length - 1; j >= 0; j--) {
+          if (avrRunner.cpu.cycles >= scheduledPinToggles[j].cpuCycle) {
+             setArduinoPin(scheduledPinToggles[j].pinName, scheduledPinToggles[j].state);
+             // DEBUG LOG
+             postMessage({ type: 'SERIAL_OUTPUT', payload: { text: `[SIM] Toggled ${scheduledPinToggles[j].pinName} to ${scheduledPinToggles[j].state} at cycle ${avrRunner.cpu.cycles}\n` } });
+             
+             scheduledPinToggles.splice(j, 1);
+          } else {
+             nextToggleCycle = Math.min(nextToggleCycle, scheduledPinToggles[j].cpuCycle);
+          }
+        }
+      }
+
       avrInstruction(avrRunner.cpu);
       avrRunner.cpu.tick();
     }
@@ -157,6 +205,77 @@ function flushUpdates() {
 function handlePinChange(pinName: string, voltage: number) {
   // Always notify UI for Arduino visual pins
   postMessage({ type: 'PIN_CHANGE', payload: { componentId: 'arduino-uno', pinId: pinName, voltage } });
+
+  // ULTRASONIC SENSOR SIMULATION
+  // When TRIG pin changes, simulate ECHO response
+  if (circuitGraph && voltage === 0) {
+    // TRIG just went LOW - check if it was HIGH before (falling edge)
+    const previousVoltage = trigState[pinName];
+    if (previousVoltage === true) {
+      // Find if this pin is connected to a TRIG pin of an ultrasonic sensor
+      let arduinoId = null;
+      for (const [id, comp] of circuitGraph.components.entries()) {
+        if (comp.type === 'ARDUINO_UNO') { arduinoId = id; break; }
+      }
+      
+      if (arduinoId) {
+        const connectedComponents = circuitGraph.getConnectedComponents(arduinoId, pinName);
+        
+        for (const comp of connectedComponents) {
+          if (comp.type === 'ULTRASONIC_SENSOR') {
+            const durationUs = simulatedDistanceCm * 58;
+            
+            // Post event to UI
+            postMessage({
+              type: 'ULTRASONIC_ECHO',
+              payload: {
+                sensorId: comp.id,
+                durationUs: durationUs,
+                distanceCm: simulatedDistanceCm
+              }
+            });
+
+            // Hardware simulation: find ECHO pin and send pulse
+            if (avrRunner) {
+              let echoArduinoPin = null;
+              for (let bit = 0; bit <= 13; bit++) {
+                if (circuitGraph.findPath(`${comp.id}.ECHO`, `${arduinoId}.D${bit}`)) {
+                  echoArduinoPin = `D${bit}`; break;
+                }
+              }
+              if (!echoArduinoPin) {
+                for (let bit = 0; bit <= 5; bit++) {
+                  if (circuitGraph.findPath(`${comp.id}.ECHO`, `${arduinoId}.A${bit}`)) {
+                    echoArduinoPin = `A${bit}`; break;
+                  }
+                }
+              }
+
+              if (echoArduinoPin) {
+                // Real HC-SR04 delays about 450us before ECHO goes HIGH
+                const startDelayUs = 450;
+                
+                const startCycle = avrRunner.cpu.cycles + (startDelayUs * 16);
+                const endCycle = startCycle + (durationUs * 16);
+
+                scheduledPinToggles.push({ cpuCycle: startCycle, pinName: echoArduinoPin, state: true });
+                scheduledPinToggles.push({ cpuCycle: endCycle, pinName: echoArduinoPin, state: false });
+                
+                nextToggleCycle = Math.min(nextToggleCycle, startCycle);
+                
+                postMessage({ type: 'SERIAL_OUTPUT', payload: { text: `[SIM] Found ECHO on ${echoArduinoPin}, pulse scheduled for ${durationUs}us\n` } });
+              } else {
+                postMessage({ type: 'SERIAL_OUTPUT', payload: { text: `[SIM] ERROR: ECHO pin wire not found in graph!\n` } });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Track TRIG state
+  trigState[pinName] = voltage > 2.5;
 
   if (circuitGraph) {
     // 1. Find the real Arduino ID in the graph
@@ -456,6 +575,10 @@ self.onmessage = function (e) {
           avrRunner.usart.writeByte(payload.text.charCodeAt(i));
         }
       }
+      break;
+
+    case 'SET_SENSOR_DISTANCE':
+      simulatedDistanceCm = payload.distanceCm;
       break;
   }
 };
