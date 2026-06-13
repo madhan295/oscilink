@@ -13,6 +13,8 @@ import {
 import { SerializedCircuitGraph } from '../types/simulation';
 import { CircuitGraph } from '../simulation/engine/CircuitGraph';
 import { getAbsolutePinPosition } from '../utils/geometry';
+import { validateCircuit } from '../utils/circuitValidator';
+import { useSimulationStore } from './simulationStore';
 
 interface WorkspaceSnapshot {
   components: CircuitComponent[];
@@ -57,6 +59,7 @@ interface WorkspaceActions {
   loadProject: (components: CircuitComponent[], wires: Wire[], viewport: { scale: number; x: number; y: number }) => void;
   buildCircuitGraph: () => SerializedCircuitGraph;
   setPanMode: (mode: boolean) => void;
+  validateCircuit: () => void;
 }
 
 type WorkspaceStore = WorkspaceState & WorkspaceActions;
@@ -358,11 +361,51 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
 
       setPanMode: (mode) => set((state) => {
         state.panMode = mode;
-      })
+      }),
+
+      validateCircuit: () => {
+        const state = get();
+        const graph = new CircuitGraph();
+        
+        const mappedComponents = state.components.map(comp => ({
+          id: comp.id,
+          type: comp.type,
+          properties: comp.properties,
+          pins: Object.values(comp.pins).map(pin => ({
+            id: pin.id,
+            type: pin.type,
+            direction: pin.direction
+          }))
+        }));
+
+        const mappedWires = state.wires.map(w => ({
+          id: w.id,
+          fromComponentId: w.from.componentId,
+          fromPinId: w.from.pinId,
+          toComponentId: w.to.componentId,
+          toPinId: w.to.pinId
+        }));
+        
+        graph.buildFromCircuitState(mappedComponents as any, mappedWires);
+        
+        const errors = validateCircuit(state.components, state.wires, graph);
+        useSimulationStore.getState().setCircuitErrors(errors);
+      }
     })),
     { name: 'workspace-store', enabled: (import.meta as any).env ? (import.meta as any).env.DEV : true }
   )
 );
+
+let validationDebounceTimer: ReturnType<typeof setTimeout>;
+
+useWorkspaceStore.subscribe((state, prevState) => {
+  if (state.wires !== prevState.wires || state.components.length !== prevState.components.length) {
+    clearTimeout(validationDebounceTimer);
+    validationDebounceTimer = setTimeout(() => {
+      useWorkspaceStore.getState().validateCircuit();
+    }, 400);
+  }
+});
 
 // --- TEMPORARY DEBUG CODE ---
 if (typeof window !== 'undefined') {
