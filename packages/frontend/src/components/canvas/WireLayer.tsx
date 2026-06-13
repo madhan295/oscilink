@@ -12,6 +12,7 @@ export const WireLayer: React.FC<WireLayerProps> = ({ previewWirePoints }) => {
   const selectedWireIds = useWorkspaceStore(state => state.selectedWireIds);
   const selectWire = useWorkspaceStore(state => state.selectWire);
   const removeWire = useWorkspaceStore(state => state.removeWire);
+  const isDrawingWire = useWorkspaceStore(state => state.isDrawingWire);
 
   const [hoveredWireId, setHoveredWireId] = React.useState<string | null>(null);
   
@@ -143,9 +144,10 @@ export const WireLayer: React.FC<WireLayerProps> = ({ previewWirePoints }) => {
         <Line
           points={wire.points}
           stroke="transparent"
-          strokeWidth={6}
+          strokeWidth={3}
           lineJoin="round"
           lineCap="round"
+          listening={!isDrawingWire}
           onMouseEnter={() => {
             setHoveredWireId(wire.id);
             document.body.style.cursor = 'pointer';
