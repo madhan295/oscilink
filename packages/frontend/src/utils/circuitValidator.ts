@@ -48,7 +48,7 @@ export function detectShortCircuit(_components: CircuitComponent[], _wires: Wire
       }
 
       // Add other pins of the SAME component (internal paths), except complex ones
-      if (comp && comp.pins && !['ARDUINO_UNO', 'PUSH_BUTTON', 'SWITCH', 'ULTRASONIC_SENSOR', 'RELAY'].includes(comp.type)) {
+      if (comp && comp.pins && !['ARDUINO_UNO', 'PUSH_BUTTON', 'SWITCH', 'LED', 'ULTRASONIC_SENSOR', 'RELAY'].includes(comp.type)) {
         for (const pin of comp.pins) {
           if (pin.id !== node.pinId) {
             const internalNeighborId = `${comp.id}.${pin.id}`;
