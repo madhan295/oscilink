@@ -3,7 +3,7 @@ import { CircuitComponent, Wire } from '../types/components';
 import { CircuitGraph } from '../simulation/engine/CircuitGraph';
 import { CircuitError } from '../types/simulation';
 
-export function detectShortCircuit(components: CircuitComponent[], wires: Wire[], graph: CircuitGraph): CircuitError[] {
+export function detectShortCircuit(_components: CircuitComponent[], _wires: Wire[], graph: CircuitGraph): CircuitError[] {
   const errors: CircuitError[] = [];
   const powerNodes = Array.from(graph.nodes.values()).filter(n => n.pinType === 'power');
   
@@ -48,7 +48,7 @@ export function detectShortCircuit(components: CircuitComponent[], wires: Wire[]
       }
 
       // Add other pins of the SAME component (internal paths), except complex ones
-      if (comp && comp.pins && !['ARDUINO_UNO', 'BATTERY', 'PUSH_BUTTON', 'SWITCH', 'ULTRASONIC_SENSOR', 'RELAY'].includes(comp.type)) {
+      if (comp && comp.pins && !['ARDUINO_UNO', 'PUSH_BUTTON', 'SWITCH', 'ULTRASONIC_SENSOR', 'RELAY'].includes(comp.type)) {
         for (const pin of comp.pins) {
           if (pin.id !== node.pinId) {
             const internalNeighborId = `${comp.id}.${pin.id}`;
@@ -84,7 +84,7 @@ export function detectShortCircuit(components: CircuitComponent[], wires: Wire[]
   return errors;
 }
 
-export function detectLEDWithoutResistor(components: CircuitComponent[], wires: Wire[], graph: CircuitGraph): CircuitError[] {
+export function detectLEDWithoutResistor(components: CircuitComponent[], _wires: Wire[], graph: CircuitGraph): CircuitError[] {
   const errors: CircuitError[] = [];
   const leds = components.filter(c => c.type === 'LED');
 
@@ -110,7 +110,7 @@ export function detectLEDWithoutResistor(components: CircuitComponent[], wires: 
   return errors;
 }
 
-export function detectMissingGround(components: CircuitComponent[], wires: Wire[], graph: CircuitGraph): CircuitError[] {
+export function detectMissingGround(components: CircuitComponent[], _wires: Wire[], _graph: CircuitGraph): CircuitError[] {
   const errors: CircuitError[] = [];
   
   components.forEach(comp => {
@@ -135,11 +135,11 @@ export function detectMissingGround(components: CircuitComponent[], wires: Wire[
   return errors;
 }
 
-export function detectUnconnectedPowerPin(components: CircuitComponent[], wires: Wire[], graph: CircuitGraph): CircuitError[] {
+export function detectUnconnectedPowerPin(components: CircuitComponent[], _wires: Wire[], _graph: CircuitGraph): CircuitError[] {
   const errors: CircuitError[] = [];
   
   components.forEach(comp => {
-    if (comp.type === 'ARDUINO_UNO' || comp.type === 'BATTERY') return;
+    if (comp.type === 'ARDUINO_UNO') return;
     
     Object.values(comp.pins).forEach(pin => {
       if (pin.type === 'power' || pin.id === 'VCC' || pin.id === '+' || pin.id === '5V') {
@@ -160,7 +160,7 @@ export function detectUnconnectedPowerPin(components: CircuitComponent[], wires:
   return errors;
 }
 
-export function detectReversedPolarity(components: CircuitComponent[], wires: Wire[], graph: CircuitGraph): CircuitError[] {
+export function detectReversedPolarity(components: CircuitComponent[], _wires: Wire[], graph: CircuitGraph): CircuitError[] {
   const errors: CircuitError[] = [];
   const leds = components.filter(c => c.type === 'LED');
 
@@ -192,7 +192,7 @@ export function detectReversedPolarity(components: CircuitComponent[], wires: Wi
   return errors;
 }
 
-export function detectOvercurrent(components: CircuitComponent[], wires: Wire[], graph: CircuitGraph): CircuitError[] {
+export function detectOvercurrent(components: CircuitComponent[], _wires: Wire[], graph: CircuitGraph): CircuitError[] {
   const errors: CircuitError[] = [];
   const leds = components.filter(c => c.type === 'LED');
 
@@ -202,7 +202,7 @@ export function detectOvercurrent(components: CircuitComponent[], wires: Wire[],
     const totalResistance = resAnode + resCathode;
     
     if (totalResistance > 0) {
-      const forwardVoltage = led.properties?.forwardVoltage || 2.0;
+      const forwardVoltage = Number(led.properties?.forwardVoltage || 2.0);
       // Assume worst-case 5V supply
       const expectedCurrent = ((5.0 - forwardVoltage) / totalResistance) * 1000;
       
@@ -231,7 +231,7 @@ export function detectOvercurrent(components: CircuitComponent[], wires: Wire[],
   return errors;
 }
 
-export function detectFloatingAnalogInput(components: CircuitComponent[], wires: Wire[], graph: CircuitGraph): CircuitError[] {
+export function detectFloatingAnalogInput(components: CircuitComponent[], _wires: Wire[], graph: CircuitGraph): CircuitError[] {
   const errors: CircuitError[] = [];
   const arduino = components.find(c => c.type === 'ARDUINO_UNO');
   
@@ -243,8 +243,7 @@ export function detectFloatingAnalogInput(components: CircuitComponent[], wires:
         const connectedComps = graph.getConnectedComponents(arduino.id, pin.id);
         const hasDefinedSource = connectedComps.some(c => 
           c.type === 'POTENTIOMETER' || 
-          c.type === 'ULTRASONIC_SENSOR' ||
-          c.type === 'BATTERY'
+          c.type === 'ULTRASONIC_SENSOR'
         );
         
         if (!hasDefinedSource) {
