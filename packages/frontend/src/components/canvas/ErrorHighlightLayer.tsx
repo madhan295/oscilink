@@ -22,24 +22,35 @@ export const ErrorHighlightLayer: React.FC = () => {
 
   const layerRef = useRef<Konva.Layer>(null);
 
-  // Animation states
-  const [dashOffset, setDashOffset] = useState(0);
-  const [pulseOpacity, setPulseOpacity] = useState(0.04);
-  const [focusPulseOpacity, setFocusPulseOpacity] = useState(0);
+  // Animation states (using React state for tooltips is fine, but not for 60fps animation)
   const [hoveredError, setHoveredError] = useState<{ text: string, x: number, y: number } | null>(null);
+
+  // For 60fps animations, use refs to avoid React re-renders
+  const dashOffsetRef = useRef(0);
+  const pulseOpacityRef = useRef(0.04);
+  const focusPulseOpacityRef = useRef(0);
 
   useEffect(() => {
     let anim: Konva.Animation;
     if (layerRef.current && status === 'RUNNING' && circuitErrors.length > 0) {
       anim = new Konva.Animation((frame) => {
-        if (!frame) return;
-        setDashOffset(prev => prev - 0.5);
+        if (!frame || !layerRef.current) return;
+        dashOffsetRef.current -= 0.5;
         
         // Sine wave between 0.04 and 0.10 for pulsing fill
-        // amplitude = 0.03, center = 0.07, frequency roughly 2*PI/1000ms
         const time = frame.time;
-        const newOpacity = 0.07 + 0.03 * Math.sin(time / 200);
-        setPulseOpacity(newOpacity);
+        pulseOpacityRef.current = 0.07 + 0.03 * Math.sin(time / 200);
+        
+        // Find nodes and update directly
+        const layer = layerRef.current;
+        const dashRects = layer.find('.error-dash');
+        dashRects.forEach(node => node.dashOffset(dashOffsetRef.current));
+        
+        const pulseRects = layer.find('.error-pulse');
+        pulseRects.forEach(node => node.opacity(pulseOpacityRef.current));
+
+        const pulseLines = layer.find('.error-pulse-line');
+        pulseLines.forEach(node => node.opacity(pulseOpacityRef.current * 6));
       }, layerRef.current);
       anim.start();
     }
@@ -52,27 +63,36 @@ export const ErrorHighlightLayer: React.FC = () => {
     let anim: Konva.Animation;
     if (focusTrigger && layerRef.current) {
       anim = new Konva.Animation((frame) => {
-        if (!frame) return;
+        if (!frame || !layerRef.current) return;
         const elapsed = Date.now() - focusTrigger.timestamp;
         if (elapsed > 3000) {
           anim.stop();
-          setFocusPulseOpacity(0);
+          focusPulseOpacityRef.current = 0;
+          const focusRects = layerRef.current.find('.focus-flash');
+          focusRects.forEach(node => node.opacity(0));
           return;
         }
         // Rapid oscillation + decay
         const flash = 0.5 + 0.5 * Math.sin(elapsed / 50);
         const decay = 1 - (elapsed / 3000);
-        setFocusPulseOpacity(flash * decay * 0.8);
+        focusPulseOpacityRef.current = flash * decay * 0.8;
+        
+        const focusRects = layerRef.current.find('.focus-flash');
+        focusRects.forEach(node => node.opacity(focusPulseOpacityRef.current));
       }, layerRef.current);
       anim.start();
     }
     return () => {
       if (anim) anim.stop();
-      setFocusPulseOpacity(0);
+      focusPulseOpacityRef.current = 0;
+      if (layerRef.current) {
+        const focusRects = layerRef.current.find('.focus-flash');
+        focusRects.forEach(node => node.opacity(0));
+      }
     };
   }, [focusTrigger]);
 
-  if ((status !== 'RUNNING' || circuitErrors.length === 0) && focusPulseOpacity === 0) {
+  if ((status !== 'RUNNING' || circuitErrors.length === 0) && !focusTrigger) {
     return <Layer listening={false} />;
   }
 
@@ -121,10 +141,11 @@ export const ErrorHighlightLayer: React.FC = () => {
         return (
           <Line
             key={`wire-err-${id}`}
+            name="error-pulse-line"
             points={wire.points}
             stroke={SEVERITY_COLORS[severity]}
             strokeWidth={10} // Wider than regular wire
-            opacity={pulseOpacity * 6} // oscillating between 0.24 and 0.60
+            opacity={pulseOpacityRef.current * 6} // oscillating between 0.24 and 0.60
             lineCap="round"
             lineJoin="round"
             listening={false}
@@ -159,14 +180,15 @@ export const ErrorHighlightLayer: React.FC = () => {
             rotation={comp.rotation || 0}
           >
             {/* Focus Flash Overlay */}
-            {isFocused && focusPulseOpacity > 0 && (
+            {isFocused && (
               <Rect
+                name="focus-flash"
                 x={rectX - 4}
                 y={rectY - 4}
                 width={rectW + 8}
                 height={rectH + 8}
                 fill="white"
-                opacity={focusPulseOpacity}
+                opacity={focusPulseOpacityRef.current}
                 cornerRadius={10}
                 listening={false}
               />
@@ -176,18 +198,20 @@ export const ErrorHighlightLayer: React.FC = () => {
             {status === 'RUNNING' && (
               <>
                 <Rect
+                  name="error-pulse"
                   x={rectX}
                   y={rectY}
                   width={rectW}
                   height={rectH}
                   fill={color}
-                  opacity={pulseOpacity}
+                  opacity={pulseOpacityRef.current}
                   cornerRadius={8}
                   listening={false}
                 />
 
                 {/* Dashed Border Overlay */}
                 <Rect
+                  name="error-dash"
                   x={rectX}
                   y={rectY}
                   width={rectW}
@@ -195,7 +219,7 @@ export const ErrorHighlightLayer: React.FC = () => {
                   stroke={color}
                   strokeWidth={2 / viewport.scale}
                   dash={[8 / viewport.scale, 4 / viewport.scale]}
-                  dashOffset={dashOffset}
+                  dashOffset={dashOffsetRef.current}
                   cornerRadius={8}
                   listening={false}
                 />

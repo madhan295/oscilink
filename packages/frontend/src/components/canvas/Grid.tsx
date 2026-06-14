@@ -66,24 +66,26 @@ export const Grid: React.FC<GridProps> = ({ width, height }) => {
           const c = drawnArea.current;
           if (c.startX === 0) return;
 
+          // Don't draw the grid if zoomed out too far, it causes massive lag
+          if (viewport.scale < 0.3) return;
+
           const DOT_SPACING = 24;
-          // Scale dot radius inversely to viewport scale so it stays 1px on screen
-          const DOT_RADIUS = 1 / viewport.scale;
+          // Keep dot radius strictly 1.5 pixels on screen
+          const DOT_SIZE = 1.5 / viewport.scale;
 
           context.beginPath();
           
           const firstX = Math.floor(c.startX / DOT_SPACING) * DOT_SPACING;
           const firstY = Math.floor(c.startY / DOT_SPACING) * DOT_SPACING;
 
+          context.fillStyle = '#cccccc';
+
+          // Use fillRect instead of arc for massive performance boost
           for (let x = firstX; x <= c.endX; x += DOT_SPACING) {
             for (let y = firstY; y <= c.endY; y += DOT_SPACING) {
-              context.moveTo(x + DOT_RADIUS, y);
-              context.arc(x, y, DOT_RADIUS, 0, Math.PI * 2, false);
+              context.fillRect(x, y, DOT_SIZE, DOT_SIZE);
             }
           }
-          
-          context.fillStyle = '#cccccc';
-          context.fill();
         }}
       />
     </Layer>
