@@ -158,7 +158,7 @@ export const Canvas: React.FC<{ rightPanelOpen?: boolean }> = ({ rightPanelOpen 
     const direction = e.evt.deltaY > 0 ? -1 : 1;
     
     let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-    newScale = Math.max(0.1, Math.min(newScale, 5.0));
+    newScale = Math.max(0.1, Math.min(newScale, 10.0));
     
     const mousePointTo = {
       x: (pointer.x - viewport.x) / oldScale,
@@ -222,7 +222,7 @@ export const Canvas: React.FC<{ rightPanelOpen?: boolean }> = ({ rightPanelOpen 
   }, [clearSelection, handleWireStageClick]);
 
   const handleZoomIn = () => {
-    setViewport({ ...viewport, scale: Math.min(5.0, viewport.scale * 1.1) });
+    setViewport({ ...viewport, scale: Math.min(10.0, viewport.scale * 1.1) });
   };
 
   const handleZoomOut = () => {
@@ -257,7 +257,7 @@ export const Canvas: React.FC<{ rightPanelOpen?: boolean }> = ({ rightPanelOpen 
     const scaleX = dimensions.width / (width + padding * 2);
     const scaleY = dimensions.height / (height + padding * 2);
     let newScale = Math.min(scaleX, scaleY);
-    newScale = Math.max(0.1, Math.min(newScale, 5.0));
+    newScale = Math.max(0.1, Math.min(newScale, 10.0));
 
     const centerX = minX + (maxX - minX) / 2 + compWidth / 2;
     const centerY = minY + (maxY - minY) / 2 + compHeight / 2;

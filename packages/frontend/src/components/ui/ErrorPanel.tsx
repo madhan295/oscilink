@@ -138,7 +138,7 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
               <div className="border-t border-border flex flex-col p-2 space-y-2">
                 {compilationErrors.map((err, i) => (
                   <div key={i} className="text-sm text-red-400 font-mono bg-red-500/5 p-2 rounded border border-red-500/10 break-words">
-                    {err}
+                    <span className="font-bold text-red-300">Line {err.line}:</span> {err.message}
                   </div>
                 ))}
               </div>
