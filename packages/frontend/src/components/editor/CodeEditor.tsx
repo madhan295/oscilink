@@ -3,6 +3,7 @@ import Editor, { Monaco } from '@monaco-editor/react';
 import { useEditorStore } from '../../store/editorStore';
 import { Wand2, Search, Type, Plus, Minus } from 'lucide-react';
 import type { editor } from 'monaco-editor';
+import { analyzeCode } from '../../utils/codeAnalyzer';
 
 // Debounce helper
 function useDebounce<T extends (...args: any[]) => void>(callback: T, delay: number) {
@@ -44,49 +45,38 @@ export const CodeEditor = forwardRef<CodeEditorRef>((_props, ref) => {
     const model = editorRef.current.getModel();
     if (!model) return;
 
-    const errors: CompilationError[] = [];
-    const lines = currentCode.split('\n');
-    lines.forEach((lineText, index) => {
-      const trimmed = lineText.trim();
-      // Simple mock static analysis: check for missing semicolons on common statements
-      if (
-        (trimmed.startsWith('digitalWrite') || 
-         trimmed.startsWith('digitalRead') ||
-         trimmed.startsWith('analogRead') ||
-         trimmed.startsWith('analogWrite') ||
-         trimmed.startsWith('pinMode') ||
-         trimmed.startsWith('delay') ||
-         trimmed.startsWith('Serial.') ||
-         trimmed.match(/^[a-zA-Z_]\w*\s*=/)) // variable assignment
-         && !trimmed.endsWith(';')
-         && !trimmed.startsWith('//')
-         && !trimmed.endsWith('{')
-         && !trimmed.endsWith('}')
-      ) {
-        errors.push({
-          line: index + 1,
-          column: lineText.length || 1,
-          message: "Expected ';' at end of declaration"
-        });
-      }
-    });
+    const issues = analyzeCode(currentCode);
 
-    const markers = errors.map(err => ({
-      startLineNumber: err.line,
-      startColumn: Math.max(1, err.column),
-      endLineNumber: err.line,
-      endColumn: err.column + 2,
-      message: err.message,
-      severity: monacoRef.current!.MarkerSeverity.Error,
-      source: 'arduino-static'
-    }));
+    const markers = issues.map(err => {
+      let severity = monacoRef.current!.MarkerSeverity.Error;
+      if (err.severity === 'warning') severity = monacoRef.current!.MarkerSeverity.Warning;
+      if (err.severity === 'info') severity = monacoRef.current!.MarkerSeverity.Info;
+
+      // Make error into warning to visually distinguish from compiler errors
+      if (err.severity === 'error') severity = monacoRef.current!.MarkerSeverity.Warning;
+
+      const message = err.hint ? `${err.message}\nHint: ${err.hint}` : err.message;
+
+      return {
+        startLineNumber: err.line,
+        startColumn: Math.max(1, err.column),
+        endLineNumber: err.line,
+        endColumn: err.column + 10, // Highlight a chunk
+        message: message,
+        severity: severity,
+        source: 'arduino-static'
+      };
+    });
 
     monacoRef.current.editor.setModelMarkers(model, 'arduino-static', markers);
   }, []);
 
   useEffect(() => {
     if (isEditorReady) {
-      validateCode(code);
+      const timer = setTimeout(() => {
+        validateCode(code);
+      }, 400);
+      return () => clearTimeout(timer);
     }
   }, [code, isEditorReady, validateCode]);
 
