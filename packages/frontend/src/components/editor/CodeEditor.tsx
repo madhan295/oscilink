@@ -44,12 +44,11 @@ export const CodeEditor = forwardRef<CodeEditorRef>((_props, ref) => {
     const issues = analyzeCode(currentCode);
     const setStaticErrors = useEditorStore.getState().setStaticErrors;
 
-    // Save to store for the Toolbar and ErrorPanel
     setStaticErrors(issues.map(i => ({
       line: i.line,
       column: i.column,
       message: i.message,
-      severity: i.severity === 'info' ? 'warning' : i.severity, // Map info to warning
+      severity: i.severity === 'info' ? 'warning' : i.severity,
       hint: i.hint
     })));
 
