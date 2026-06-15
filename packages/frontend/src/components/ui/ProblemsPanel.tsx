@@ -68,7 +68,7 @@ export function ProblemsPanel({ editorRef }: ProblemsPanelProps) {
                 <div 
                   key={i} 
                   className="flex flex-col gap-2 p-3 bg-red-500/5 border-l-2 border-red-500 cursor-pointer hover:bg-red-500/10 transition-colors"
-                  onClick={() => err.affectedComponentIds?.forEach(id => triggerFocus(id))}
+                  onClick={() => err.affectedComponentIds && triggerFocus(err.affectedComponentIds)}
                 >
                   <div className="flex items-start gap-2">
                     <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
@@ -83,7 +83,7 @@ export function ProblemsPanel({ editorRef }: ProblemsPanelProps) {
                       {err.affectedComponentIds.map(id => (
                         <span 
                           key={id} 
-                          onClick={(e) => { e.stopPropagation(); triggerFocus(id); }}
+                          onClick={(e) => { e.stopPropagation(); triggerFocus([id]); }}
                           className="flex items-center gap-1 bg-[#2A2B36] border border-white/10 px-1.5 py-0.5 rounded text-[10px] text-gray-300 hover:bg-[#3A3B46]"
                         >
                           <Cpu size={10} className="text-gray-400" />

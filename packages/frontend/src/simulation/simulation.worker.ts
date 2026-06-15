@@ -539,7 +539,6 @@ function initializeSimulation(hex: string, graphData: any) {
     // ADMUX Invalid Channel Check (0x7C)
     const origAdmuxHook = avrRunner.cpu.writeHooks[0x7C];
     avrRunner.cpu.writeHooks[0x7C] = (value: number, oldValue: number, addrArgs: number, mask: number) => {
-      const channel = value & 0x0F; // actually lower 4 bits are MUX3:0. For ATmega328P, MUX3=0 means ADC0-7. Let's just check lower 3 bits.
       const ch = value & 0x07;
       if (ch > 5) {
         postMessage({ type: 'WARNING', payload: { text: `Invalid analog channel selected: A${ch}. Valid channels are A0-A5.` } });
