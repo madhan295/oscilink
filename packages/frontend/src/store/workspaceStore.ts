@@ -64,6 +64,9 @@ interface WorkspaceActions {
   buildCircuitGraph: () => SerializedCircuitGraph;
   setPanMode: (mode: boolean) => void;
   validateCircuit: () => void;
+  duplicateSelected: () => void;
+  bringForward: () => void;
+  sendBackward: () => void;
 }
 
 type WorkspaceStore = WorkspaceState & WorkspaceActions;
@@ -284,6 +287,66 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
       },
 
       setViewport: (viewport) => set((state) => { state.viewport = viewport; }),
+
+      duplicateSelected: () => {
+        set((state) => {
+          const newIds: string[] = [];
+          const selected = state.components.filter(c => state.selectedComponentIds.includes(c.id));
+          if (selected.length > 0) {
+            state.selectedComponentIds = [];
+            state.selectedWireIds = [];
+            selected.forEach(comp => {
+              const newComp = JSON.parse(JSON.stringify(comp));
+              newComp.id = uuidv4();
+              newComp.position.x += 24;
+              newComp.position.y += 24;
+              Object.values(newComp.pins).forEach((pin: any) => {
+                pin.connectedWireIds = [];
+              });
+              state.components.push(newComp);
+              newIds.push(newComp.id);
+            });
+            state.selectedComponentIds = newIds;
+          }
+        });
+        get().pushHistory();
+      },
+
+      bringForward: () => {
+        set((state) => {
+          const indices = state.selectedComponentIds
+            .map(id => state.components.findIndex(c => c.id === id))
+            .filter(idx => idx !== -1)
+            .sort((a, b) => b - a);
+
+          for (const idx of indices) {
+            if (idx < state.components.length - 1) {
+              const temp = state.components[idx];
+              state.components[idx] = state.components[idx + 1];
+              state.components[idx + 1] = temp;
+            }
+          }
+        });
+        get().pushHistory();
+      },
+
+      sendBackward: () => {
+        set((state) => {
+          const indices = state.selectedComponentIds
+            .map(id => state.components.findIndex(c => c.id === id))
+            .filter(idx => idx !== -1)
+            .sort((a, b) => a - b);
+
+          for (const idx of indices) {
+            if (idx > 0) {
+              const temp = state.components[idx];
+              state.components[idx] = state.components[idx - 1];
+              state.components[idx - 1] = temp;
+            }
+          }
+        });
+        get().pushHistory();
+      },
 
       startWireDrawing: (pin) => set((state) => {
         state.isDrawingWire = true;
