@@ -1,4 +1,5 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
 import { Group, Rect, Circle, Text, Line } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
@@ -14,7 +15,7 @@ const COMMONLY_USED_PINS = ['IN', 'VCC', 'GND', 'NO', 'COM', 'NC'];
 
 export const Relay: React.FC<RelayProps> = ({ component }) => {
   const [hoveredPin, setHoveredPin] = useState<string | null>(null);
-  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = useContext(CanvasContext);
+  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
 
   const compState = useSimulationStore((state) => state.componentStates[component.id]) as any;
   const isActivated = compState?.isActivated ?? false;
@@ -195,3 +196,6 @@ export const Relay: React.FC<RelayProps> = ({ component }) => {
     </Group>
   );
 };
+
+
+

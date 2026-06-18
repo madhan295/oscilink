@@ -1,4 +1,5 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
 import { Group, Rect, Circle, Text, Line } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
@@ -13,7 +14,7 @@ const COMMONLY_USED_PINS = ['VCC', 'TRIG', 'ECHO', 'GND'];
 
 export const UltrasonicSensor: React.FC<UltrasonicSensorProps> = ({ component }) => {
   const [hoveredPin, setHoveredPin] = useState<string | null>(null);
-  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = useContext(CanvasContext);
+  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
 
   const handleDragStart = () => {
     useWorkspaceStore.getState().pushHistory();
@@ -250,3 +251,6 @@ export const UltrasonicSensor: React.FC<UltrasonicSensorProps> = ({ component })
     </Group>
   );
 };
+
+
+

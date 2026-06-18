@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
 import { Group, Rect, Line, Circle, Text } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
@@ -34,6 +35,7 @@ function getResistorBands(resistance: number): string[] {
 export const Resistor: React.FC<ResistorProps> = ({ component }) => {
   const [hoveredPin, setHoveredPin] = useState<string | null>(null);
   const outerGroupRef = useRef<any>(null);
+  useComponentDropAnimation(component, outerGroupRef);
 
   const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
 
@@ -176,3 +178,5 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
     </Group>
   );
 };
+
+

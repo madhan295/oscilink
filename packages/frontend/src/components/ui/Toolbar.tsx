@@ -1,4 +1,5 @@
-import { PanelLeft, PanelRight, Play, Loader2, Check, Square } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { PanelLeft, PanelRight, Play, Loader2, Square, RotateCcw, Cpu, User, Settings, ChevronDown, FileCode2, FolderOpen, Save, AlertTriangle, AlertCircle } from 'lucide-react';
 import { UndoRedoButtons } from './UndoRedoButtons';
 import { useCompiler } from '../../hooks/useCompiler';
 import { useSimulation } from '../../hooks/useSimulation';
@@ -6,9 +7,10 @@ import { useEditorStore } from '../../store/editorStore';
 import { useSimulationStore } from '../../store/simulationStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { CodeEditorRef } from '../editor/CodeEditor';
-import { AlertTriangle, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { FileMenu } from './FileMenu';
+import { Button } from './Button';
+import { Tooltip } from './Tooltip';
+import { clsx } from 'clsx';
 
 interface ToolbarProps {
   leftOpen: boolean;
@@ -22,7 +24,7 @@ interface ToolbarProps {
 
 export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorPanelOpen, setErrorPanelOpen, editorRef }: ToolbarProps) {
   const { compile } = useCompiler();
-  const simulation = useSimulation(); // Call this to ensure worker initializes
+  const simulation = useSimulation();
   const isCompiling = useEditorStore(state => state.isCompiling);
   const compilationErrors = useEditorStore(state => state.compilationErrors);
   const staticErrors = useEditorStore(state => state.staticErrors);
@@ -31,18 +33,27 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
   const circuitErrors = useSimulationStore(state => state.circuitErrors);
   const runtimeWarnings = useSimulationStore(state => state.runtimeWarnings);
 
-  const errorCount = compilationErrors.length;
-  const showCheckmark = status === 'COMPILED' && errorCount === 0;
+  const [compileDropdownOpen, setCompileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Calculate total diagnostics
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setCompileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const staticErrorCount = staticErrors.filter(e => e.severity === 'error').length;
   const staticWarningCount = staticErrors.filter(e => e.severity === 'warning').length;
-
   const totalErrors = compilationErrors.length + staticErrorCount + circuitErrors.filter(e => e.severity === 'error').length;
   const totalWarnings = runtimeWarnings.length + staticWarningCount + circuitErrors.filter(e => e.severity === 'warning').length;
   const hasDiagnostics = totalErrors > 0 || totalWarnings > 0 || circuitErrors.length > 0;
 
   const handleRun = () => {
+    setCompileDropdownOpen(false);
     if (!compiledHex) {
       toast.error('Please compile the code first');
       return;
@@ -52,88 +63,186 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
     simulation.start();
   };
 
+  const handleCompile = () => {
+    compile(editorRef);
+  };
+
+  const getStatusDisplay = () => {
+    if (isCompiling) return { text: 'Compiling...', color: 'text-accent-orange', dot: <Loader2 size={12} className="animate-spin text-accent-orange" /> };
+    if (status === 'RUNNING') return { text: 'Running', color: 'text-accent-green', dot: <div className="w-2 h-2 rounded-full bg-accent-green animate-status-pulse" /> };
+    if (status === 'ERROR') return { text: 'Error', color: 'text-accent-red', dot: <div className="w-2 h-2 rounded-full bg-accent-red" /> };
+    if (status === 'COMPILED') return { text: 'Ready', color: 'text-accent-blue', dot: <div className="w-2 h-2 rounded-full bg-accent-blue" /> };
+    if (status === 'PAUSED') return { text: 'Paused', color: 'text-accent-orange', dot: <div className="w-2 h-2 rounded-full bg-accent-orange" /> };
+    return { text: 'Idle', color: 'text-text-muted', dot: <div className="w-2 h-2 rounded-full bg-text-muted" /> };
+  };
+
+  const statusDisplay = getStatusDisplay();
+
   return (
-    <header className="h-[52px] min-h-[52px] bg-surface border-b border-border flex items-center px-4 gap-4">
-      <h1 className="text-lg font-semibold text-primary">Oscilink</h1>
+    <header className="h-14 min-h-[56px] bg-surface border-b border-border-default flex items-center justify-between px-4">
+      {/* Left Section: Logo */}
+      <div className="flex items-center gap-3 w-[240px]">
+        <div className="bg-primary/10 p-1.5 rounded-md text-primary">
+          <Cpu size={20} />
+        </div>
+        <h1 className="text-lg font-bold text-text-primary tracking-tight">Arduino Sim</h1>
+      </div>
       
-      <div className="h-6 w-px bg-border mx-2" />
-      
-      <FileMenu />
-      <UndoRedoButtons />
+      {/* Center Section: Actions */}
+      <div className="flex items-center gap-4 flex-1 justify-center">
+        {/* File Operations */}
+        <div className="flex items-center gap-1 bg-elevated p-1 rounded-md border border-border-subtle">
+          <Tooltip position="bottom" content="New Project" shortcut="Ctrl+N">
+            <Button variant="ghost" size="sm" className="px-2" onClick={() => toast('New project feature coming soon')}>
+              <FileCode2 size={16} />
+            </Button>
+          </Tooltip>
+          <Tooltip position="bottom" content="Open Project" shortcut="Ctrl+O">
+            <Button variant="ghost" size="sm" className="px-2" onClick={() => toast('Open project feature coming soon')}>
+              <FolderOpen size={16} />
+            </Button>
+          </Tooltip>
+          <Tooltip position="bottom" content="Save Project" shortcut="Ctrl+S">
+            <Button variant="ghost" size="sm" className="px-2" onClick={() => toast('Save project feature coming soon')}>
+              <Save size={16} />
+            </Button>
+          </Tooltip>
+        </div>
 
-      {/* Compile Button */}
-      <button
-        onClick={() => compile(editorRef)}
-        disabled={isCompiling || status === 'RUNNING'}
-        className="relative flex items-center gap-2 px-4 py-1.5 rounded bg-[#059669] hover:bg-[#047857] disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
-      >
-        {isCompiling ? (
-          <Loader2 size={16} className="animate-spin" />
-        ) : showCheckmark ? (
-          <Check size={16} />
-        ) : (
-          <Play size={16} fill="currentColor" />
-        )}
-        <span className="font-medium text-sm">Compile</span>
-        
-        {/* Error count badge */}
-        {errorCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
-            {errorCount}
-          </span>
-        )}
-      </button>
+        <div className="h-6 w-px bg-border-default" />
 
-      {/* Run/Stop Buttons */}
-      {status === 'RUNNING' ? (
-        <button
-          onClick={() => simulation.stop()}
-          className="relative flex items-center gap-2 px-4 py-1.5 rounded bg-red-600 hover:bg-red-700 text-white transition-colors"
-        >
-          <Square size={14} fill="currentColor" />
-          <span className="font-medium text-sm">Stop</span>
-        </button>
-      ) : (
-        <button
-          onClick={handleRun}
-          disabled={status !== 'COMPILED' || isCompiling}
-          className="relative flex items-center gap-2 px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
-        >
-          <Play size={16} fill="currentColor" />
-          <span className="font-medium text-sm">Run</span>
-        </button>
-      )}
+        <UndoRedoButtons />
 
-      <div className="flex items-center ml-auto gap-2 text-text-secondary">
-        {hasDiagnostics && (
-          <button 
-            onClick={() => setErrorPanelOpen(!errorPanelOpen)} 
-            className={`relative p-1.5 mr-2 rounded transition-colors ${errorPanelOpen ? 'bg-surface-hover text-primary' : 'hover:bg-surface-hover'}`}
-            title="Toggle Diagnostics Panel"
-          >
-            {totalErrors > 0 ? <AlertCircle size={18} className="text-red-500" /> : <AlertTriangle size={18} className="text-orange-500" />}
+        <div className="h-6 w-px bg-border-default" />
+
+        {/* Action Group */}
+        <div className="flex items-center gap-2">
+          {/* Compile/Run Split Button */}
+          <div className="relative flex items-stretch" ref={dropdownRef}>
+            <Tooltip position="bottom" content="Compile Code">
+              <Button
+                variant="primary"
+                onClick={handleCompile}
+                isLoading={isCompiling}
+                disabled={status === 'RUNNING'}
+                className="rounded-r-none border-r border-primary-hover px-4"
+                leftIcon={!isCompiling && <CheckIcon status={status} hasErrors={totalErrors > 0} />}
+              >
+                Compile
+              </Button>
+            </Tooltip>
             
-            <span className={`absolute -top-1.5 -right-1.5 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full ${totalErrors > 0 ? 'bg-red-500' : 'bg-orange-500'}`}>
-              {totalErrors > 0 ? totalErrors : totalWarnings > 0 ? totalWarnings : circuitErrors.length}
-            </span>
-          </button>
-        )}
+            <Tooltip position="bottom" content="Run Options">
+              <Button
+                variant="primary"
+                className="rounded-l-none px-2"
+                onClick={() => setCompileDropdownOpen(!compileDropdownOpen)}
+                disabled={isCompiling || status === 'RUNNING'}
+              >
+                <ChevronDown size={16} />
+              </Button>
+            </Tooltip>
 
-        <button 
-          onClick={() => setLeftOpen(!leftOpen)} 
-          className={`p-1.5 rounded transition-colors ${leftOpen ? 'bg-surface-hover text-primary' : 'hover:bg-surface-hover'}`}
-          title="Toggle Left Panel"
-        >
-          <PanelLeft size={18} />
-        </button>
-        <button 
-          onClick={() => setRightOpen(!rightOpen)} 
-          className={`p-1.5 rounded transition-colors ${rightOpen ? 'bg-surface-hover text-primary' : 'hover:bg-surface-hover'}`}
-          title="Toggle Right Panel"
-        >
-          <PanelRight size={18} />
-        </button>
+            {compileDropdownOpen && (
+              <div className="absolute top-full right-0 mt-1 w-40 bg-elevated border border-border-default rounded-md shadow-lg z-50 py-1">
+                <button
+                  onClick={handleRun}
+                  disabled={status !== 'COMPILED'}
+                  className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <Play size={14} />
+                  Run Simulation
+                </button>
+              </div>
+            )}
+          </div>
+
+          <Tooltip position="bottom" content="Stop Simulation">
+            <Button 
+              variant="danger" 
+              onClick={() => simulation.stop()}
+              disabled={status !== 'RUNNING'}
+              leftIcon={<Square size={14} fill="currentColor" />}
+            >
+              Stop
+            </Button>
+          </Tooltip>
+          
+          <Tooltip position="bottom" content="Reset Simulation">
+            <Button 
+              variant="secondary" 
+              onClick={() => simulation.reset()}
+              disabled={status === 'IDLE' || isCompiling}
+              leftIcon={<RotateCcw size={14} />}
+            >
+              Reset
+            </Button>
+          </Tooltip>
+        </div>
+      </div>
+
+      {/* Right Section: Status & Tools */}
+      <div className="flex items-center justify-end gap-4 w-[240px]">
+        {/* Connection Status */}
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-elevated rounded-full border border-border-subtle shadow-sm">
+          {statusDisplay.dot}
+          <span className={clsx('text-xs font-medium', statusDisplay.color)}>
+            {statusDisplay.text}
+          </span>
+        </div>
+
+        <div className="h-6 w-px bg-border-default" />
+
+        {/* Panel Toggles & Diagnostics */}
+        <div className="flex items-center gap-1 text-text-secondary">
+          {hasDiagnostics && (
+            <Tooltip position="bottom" content="Toggle Diagnostics Panel">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className={clsx('px-2 relative', errorPanelOpen && 'bg-surface-hover text-primary')}
+                onClick={() => setErrorPanelOpen(!errorPanelOpen)} 
+              >
+                {totalErrors > 0 ? <AlertCircle size={16} className="text-error" /> : <AlertTriangle size={16} className="text-accent-orange" />}
+                <span className={clsx('absolute -top-1 -right-1 text-white text-[9px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full', totalErrors > 0 ? 'bg-error' : 'bg-accent-orange')}>
+                  {totalErrors > 0 ? totalErrors : totalWarnings > 0 ? totalWarnings : circuitErrors.length}
+                </span>
+              </Button>
+            </Tooltip>
+          )}
+
+          <Tooltip position="bottom" content="Toggle Editor Panel">
+            <Button variant="ghost" size="sm" className={clsx('px-2', leftOpen && 'bg-surface-hover text-primary')} onClick={() => setLeftOpen(!leftOpen)}>
+              <PanelLeft size={16} />
+            </Button>
+          </Tooltip>
+          
+          <Tooltip position="bottom" content="Toggle Properties Panel">
+            <Button variant="ghost" size="sm" className={clsx('px-2', rightOpen && 'bg-surface-hover text-primary')} onClick={() => setRightOpen(!rightOpen)}>
+              <PanelRight size={16} />
+            </Button>
+          </Tooltip>
+          
+          <Tooltip position="bottom" content="Settings">
+            <Button variant="ghost" size="sm" className="px-2">
+              <Settings size={16} />
+            </Button>
+          </Tooltip>
+
+          <Tooltip position="bottom" content="User Profile">
+            <div className="ml-2 w-7 h-7 rounded-full bg-primary/20 text-primary flex items-center justify-center border border-primary/30 cursor-pointer hover:bg-primary/30 transition-colors">
+              <User size={14} />
+            </div>
+          </Tooltip>
+        </div>
       </div>
     </header>
   );
+}
+
+function CheckIcon({ status, hasErrors }: { status: string, hasErrors: boolean }) {
+  if (status === 'COMPILED' && !hasErrors) {
+    return <Play size={16} />;
+  }
+  return <Play size={16} fill="currentColor" />;
 }

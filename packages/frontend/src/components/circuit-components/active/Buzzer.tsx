@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, useContext } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
 import { Group, Rect, Circle, Text, Path } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
@@ -15,7 +16,7 @@ export const Buzzer: React.FC<BuzzerProps> = ({ component }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [waveOffset, setWaveOffset] = useState(0);
 
-  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = useContext(CanvasContext);
+  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
 
   const compState = useSimulationStore((state) => state.componentStates[component.id]) as any;
   const isActive = compState?.isActive ?? false;
@@ -251,3 +252,6 @@ export const Buzzer: React.FC<BuzzerProps> = ({ component }) => {
     </Group>
   );
 };
+
+
+

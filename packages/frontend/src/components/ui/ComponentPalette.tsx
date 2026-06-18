@@ -132,6 +132,7 @@ export const ComponentPalette: React.FC = () => {
 
             try {
               const comp = createComponent(dragState.type, { x: worldX, y: worldY });
+              comp.isNew = true;
               useWorkspaceStore.getState().addComponent(comp);
               useWorkspaceStore.getState().selectComponent(comp.id, false);
               toast.success(`Added ${dragState.name}`);

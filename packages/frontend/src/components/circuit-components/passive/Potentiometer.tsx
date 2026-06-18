@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, useContext } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
 import { Group, Rect, Circle, Label, Tag, Text, Line } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import Konva from 'konva';
@@ -19,7 +20,7 @@ export const Potentiometer: React.FC<PotentiometerProps> = ({ component }) => {
   
   const outerGroupRef = useRef<Konva.Group>(null);
 
-  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = useContext(CanvasContext);
+  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
 
   const status = useSimulationStore((state) => state.status);
   const compState = useSimulationStore((state) => state.componentStates[component.id]);
@@ -234,3 +235,6 @@ export const Potentiometer: React.FC<PotentiometerProps> = ({ component }) => {
     </Group>
   );
 };
+
+
+

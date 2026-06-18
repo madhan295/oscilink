@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
 import { Group, Rect, Circle, Label, Tag, Text, Line } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import Konva from 'konva';
@@ -17,6 +18,7 @@ export const PushButton: React.FC<PushButtonProps> = ({ component }) => {
   const [isPressed, setIsPressed] = useState(false);
   
   const outerGroupRef = useRef<any>(null);
+  useComponentDropAnimation(component, outerGroupRef);
   const capRef = useRef<any>(null);
 
   const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
@@ -197,3 +199,5 @@ export const PushButton: React.FC<PushButtonProps> = ({ component }) => {
     </Group>
   );
 };
+
+

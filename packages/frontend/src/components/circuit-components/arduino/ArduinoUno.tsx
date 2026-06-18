@@ -1,4 +1,5 @@
-import React, { useState, useRef, useContext } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
 import { Group, Rect, Text, Circle, Label, Tag, Path, Line } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import Konva from 'konva';
@@ -15,7 +16,7 @@ export const ArduinoUno: React.FC<ArduinoUnoProps> = ({ component }) => {
   const [hoveredPin, setHoveredPin] = useState<string | null>(null);
   const outerGroupRef = useRef<Konva.Group>(null);
 
-  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = useContext(CanvasContext);
+  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
 
 
   const pinVoltages = useSimulationStore(state => state.pinVoltages);
@@ -419,3 +420,5 @@ export const ArduinoUno: React.FC<ArduinoUnoProps> = ({ component }) => {
     </Group>
   );
 };
+
+

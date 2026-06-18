@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, useContext } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
 import { Group, Rect, Circle, Text } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
@@ -17,7 +18,7 @@ export const LCD16x2: React.FC<LCDProps> = ({ component }) => {
   const [cursorVisible, setCursorVisible] = useState(true);
   const [flashRow, setFlashRow] = useState<number | null>(null);
   
-  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = useContext(CanvasContext);
+  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
 
   const compState = useSimulationStore((state) => state.componentStates[component.id]) as any;
   const isBacklightOn = compState?.backlight ?? false;
@@ -229,3 +230,6 @@ export const LCD16x2: React.FC<LCDProps> = ({ component }) => {
     </Group>
   );
 };
+
+
+

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { clsx } from 'clsx';
 import { useSimulationStore } from '../../store/simulationStore';
 import { useEditorStore } from '../../store/editorStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
@@ -78,45 +79,50 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
               </span>
             </button>
             
-            {circuitExpanded && (
-              <div className="border-t border-border flex flex-col">
-                {sortedCircuitErrors.map(err => (
-                  <div 
-                    key={err.id} 
-                    className="p-3 border-b last:border-b-0 border-border hover:bg-surface/50 cursor-pointer transition-colors"
-                    onClick={() => handleRowClick(err)}
-                  >
-                    <div className="flex items-start gap-2">
-                      {getSeverityIcon(err.severity)}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline justify-between gap-2 mb-1">
-                          <span className="font-bold text-sm text-text">
-                            {getReadableType(err.type)}
-                          </span>
-                          {err.affectedComponentIds && err.affectedComponentIds.length > 0 && (
-                            <div className="flex flex-wrap gap-1 justify-end">
-                              {err.affectedComponentIds.map(id => (
-                                <span key={id} className="text-[10px] px-1.5 py-0.5 bg-surface-hover border border-border rounded text-text-secondary whitespace-nowrap">
-                                  {id.split('-')[0]}
-                                </span>
-                              ))}
-                            </div>
+            <div className={clsx(
+              "grid transition-all duration-300 ease-in-out",
+              circuitExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            )}>
+              <div className="overflow-hidden">
+                <div className="border-t border-border flex flex-col">
+                  {sortedCircuitErrors.map(err => (
+                    <div 
+                      key={err.id} 
+                      className="p-3 border-b last:border-b-0 border-border hover:bg-surface/50 cursor-pointer transition-colors"
+                      onClick={() => handleRowClick(err)}
+                    >
+                      <div className="flex items-start gap-2">
+                        {getSeverityIcon(err.severity)}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline justify-between gap-2 mb-1">
+                            <span className="font-bold text-sm text-text">
+                              {getReadableType(err.type)}
+                            </span>
+                            {err.affectedComponentIds && err.affectedComponentIds.length > 0 && (
+                              <div className="flex flex-wrap gap-1 justify-end">
+                                {err.affectedComponentIds.map(id => (
+                                  <span key={id} className="text-[10px] px-1.5 py-0.5 bg-surface-hover border border-border rounded text-text-secondary whitespace-nowrap">
+                                    {id.split('-')[0]}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-sm text-text-secondary leading-snug">
+                            {err.message}
+                          </p>
+                          {err.hint && (
+                            <p className="text-xs text-text-muted italic mt-1.5">
+                              Tip: {err.hint}
+                            </p>
                           )}
                         </div>
-                        <p className="text-sm text-text-secondary leading-snug">
-                          {err.message}
-                        </p>
-                        {err.hint && (
-                          <p className="text-xs text-text-muted italic mt-1.5">
-                            Tip: {err.hint}
-                          </p>
-                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -136,15 +142,20 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
               </span>
             </button>
             
-            {compilerExpanded && (
-              <div className="border-t border-border flex flex-col p-2 space-y-2">
-                {compilationErrors.map((err, i) => (
-                  <div key={i} className="text-sm text-red-400 font-mono bg-red-500/5 p-2 rounded border border-red-500/10 break-words">
-                    <span className="font-bold text-red-300">Line {err.line}:</span> {err.message}
-                  </div>
-                ))}
+            <div className={clsx(
+              "grid transition-all duration-300 ease-in-out",
+              compilerExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            )}>
+              <div className="overflow-hidden">
+                <div className="border-t border-border flex flex-col p-2 space-y-2">
+                  {compilationErrors.map((err, i) => (
+                    <div key={i} className="text-sm text-red-400 font-mono bg-red-500/5 p-2 rounded border border-red-500/10 break-words">
+                      <span className="font-bold text-red-300">Line {err.line}:</span> {err.message}
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -164,21 +175,26 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
               </span>
             </button>
             
-            {staticExpanded && (
-              <div className="border-t border-border flex flex-col p-2 space-y-2">
-                {staticErrors.map((err, i) => (
-                  <div key={i} className={`text-sm ${err.severity === 'error' ? 'text-red-400 bg-red-500/5 border-red-500/10' : 'text-orange-400 bg-orange-500/5 border-orange-500/10'} p-2 rounded border break-words`}>
-                    <div className="flex items-start gap-2">
-                      {err.severity === 'error' ? <AlertCircle size={14} className="mt-0.5 flex-shrink-0" /> : <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />}
-                      <div className="flex-1">
-                        <p><span className="font-bold opacity-75">Line {err.line}:</span> {err.message}</p>
-                        {err.hint && <p className="text-xs italic opacity-70 mt-1">Tip: {err.hint}</p>}
+            <div className={clsx(
+              "grid transition-all duration-300 ease-in-out",
+              staticExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            )}>
+              <div className="overflow-hidden">
+                <div className="border-t border-border flex flex-col p-2 space-y-2">
+                  {staticErrors.map((err, i) => (
+                    <div key={i} className={`text-sm ${err.severity === 'error' ? 'text-red-400 bg-red-500/5 border-red-500/10' : 'text-orange-400 bg-orange-500/5 border-orange-500/10'} p-2 rounded border break-words`}>
+                      <div className="flex items-start gap-2">
+                        {err.severity === 'error' ? <AlertCircle size={14} className="mt-0.5 flex-shrink-0" /> : <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />}
+                        <div className="flex-1">
+                          <p><span className="font-bold opacity-75">Line {err.line}:</span> {err.message}</p>
+                          {err.hint && <p className="text-xs italic opacity-70 mt-1">Tip: {err.hint}</p>}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -198,16 +214,21 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
               </span>
             </button>
             
-            {runtimeExpanded && (
-              <div className="border-t border-border flex flex-col p-2 space-y-2">
-                {runtimeWarnings.map((warn, i) => (
-                  <div key={i} className="text-sm text-orange-400 bg-orange-500/5 p-2 rounded border border-orange-500/10 break-words flex items-start gap-2">
-                    <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
-                    <span>{warn}</span>
-                  </div>
-                ))}
+            <div className={clsx(
+              "grid transition-all duration-300 ease-in-out",
+              runtimeExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            )}>
+              <div className="overflow-hidden">
+                <div className="border-t border-border flex flex-col p-2 space-y-2">
+                  {runtimeWarnings.map((warn, i) => (
+                    <div key={i} className="text-sm text-orange-400 bg-orange-500/5 p-2 rounded border border-orange-500/10 break-words flex items-start gap-2">
+                      <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
+                      <span>{warn}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
+            </div>
           </div>
         )}
       </div>

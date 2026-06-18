@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { Group, Shape, Line, Circle } from 'react-konva';
 import Konva from 'konva';
 import { useWorkspaceStore } from '../../store/workspaceStore';
+import { PinFlashAnimation } from './PinFlashAnimation';
 
 interface WireLayerProps {
   previewWirePoints: number[] | null;
@@ -15,10 +16,27 @@ export const WireLayer: React.FC<WireLayerProps> = ({ previewWirePoints }) => {
   const isDrawingWire = useWorkspaceStore(state => state.isDrawingWire);
 
   const [hoveredWireId, setHoveredWireId] = React.useState<string | null>(null);
+  const [flashPoints, setFlashPoints] = React.useState<{x1:number, y1:number, x2:number, y2:number, id: string} | null>(null);
   
   const dashOffsetRef = useRef(0);
   const animationRef = useRef<Konva.Animation | null>(null);
   const layerRef = useRef<Konva.Group>(null);
+  const prevWiresLength = useRef(wires.length);
+
+  useEffect(() => {
+    if (wires.length > prevWiresLength.current) {
+      const newWire = wires[wires.length - 1];
+      if (newWire && newWire.points.length >= 4) {
+        const pts = newWire.points;
+        setFlashPoints({
+          x1: pts[0], y1: pts[1],
+          x2: pts[pts.length - 2], y2: pts[pts.length - 1],
+          id: newWire.id
+        });
+      }
+    }
+    prevWiresLength.current = wires.length;
+  }, [wires]);
 
   useEffect(() => {
     const hasErrorWires = wires.some(w => w.isError);
@@ -227,6 +245,14 @@ export const WireLayer: React.FC<WireLayerProps> = ({ previewWirePoints }) => {
           }}
           listening={false}
         />
+      )}
+
+      {/* Connection Flash Animation */}
+      {flashPoints && (
+        <Group key={`flash-${flashPoints.id}`}>
+          <PinFlashAnimation x={flashPoints.x1} y={flashPoints.y1} />
+          <PinFlashAnimation x={flashPoints.x2} y={flashPoints.y2} onComplete={() => setFlashPoints(null)} />
+        </Group>
       )}
     </Group>
   );

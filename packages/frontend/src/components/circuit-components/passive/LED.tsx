@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
 import { Group, Rect, Path, Circle, Text } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
@@ -13,6 +14,7 @@ interface LEDProps {
 export const LED: React.FC<LEDProps> = ({ component }) => {
   const [hoveredPin, setHoveredPin] = useState<string | null>(null);
   const outerGroupRef = useRef<any>(null);
+  useComponentDropAnimation(component, outerGroupRef);
   const [displayedBrightness, setDisplayedBrightness] = useState(0);
   const animFrameRef = useRef<number>();
 
@@ -214,3 +216,5 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
     </Group>
   );
 };
+
+

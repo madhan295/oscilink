@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, useContext } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
 import { Group, Rect, Circle, Text, Line, Path } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
@@ -15,9 +16,10 @@ export const ServoMotor: React.FC<ServoMotorProps> = ({ component }) => {
   const [displayedAngle, setDisplayedAngle] = useState(90);
   
   const outerGroupRef = useRef<any>(null);
+  useComponentDropAnimation(component, outerGroupRef);
   const animFrameRef = useRef<number>();
 
-  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = useContext(CanvasContext);
+  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
 
   const compState = useSimulationStore((state) => state.componentStates[component.id]);
   const servoType = component.properties?.servoType || 'positional';
@@ -224,3 +226,6 @@ export const ServoMotor: React.FC<ServoMotorProps> = ({ component }) => {
     </Group>
   );
 };
+
+
+

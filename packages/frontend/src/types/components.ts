@@ -49,6 +49,7 @@ export interface CircuitComponent {
   pins: Record<string, Pin>;
   properties: ComponentProperties;
   zIndex: number;
+  isNew?: boolean;
 }
 
 export interface Wire {
