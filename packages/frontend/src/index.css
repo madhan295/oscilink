@@ -109,3 +109,6 @@
     animation: statusPulse 2s infinite;
   }
 }
+
+body.tour-active #properties-panel { display: none !important; }
+

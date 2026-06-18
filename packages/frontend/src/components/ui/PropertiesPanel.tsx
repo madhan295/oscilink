@@ -32,6 +32,7 @@ export const PropertiesPanel: React.FC<{ rightPanelOpen?: boolean }> = ({ rightP
 
   return (
     <div 
+      id="properties-panel"
       className={clsx(
         "absolute top-4 z-50 bg-surface border border-border rounded-lg shadow-2xl w-80 transition-all duration-300 ease-in-out flex flex-col overflow-hidden pointer-events-auto",
         selectedComponentIds.length === 1 ? "h-[calc(100vh-8rem)]" : "h-auto"

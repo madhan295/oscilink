@@ -177,7 +177,7 @@ export const ComponentPalette: React.FC = () => {
 
   return (
     <>
-      <div className="w-[280px] min-w-[280px] bg-surface border-r border-border flex flex-col h-full overflow-hidden">
+      <div id="tour-component-palette" className="w-[280px] min-w-[280px] bg-surface border-r border-border flex flex-col h-full overflow-hidden">
         {/* Panel Header */}
         <div className="p-4 border-b border-border flex flex-col gap-3">
           <h2 className="text-sm font-medium text-text-secondary uppercase tracking-wider">Components</h2>

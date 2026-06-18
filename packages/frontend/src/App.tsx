@@ -11,6 +11,7 @@ import { SensorDistanceControl } from './components/ui/SensorDistanceControl';
 import { ErrorPanel } from './components/ui/ErrorPanel';
 import { setupAutoSave, deserializeProject } from './utils/projectSerializer';
 import { WelcomeModal } from './components/ui/WelcomeModal';
+import { GuidedTour } from './components/ui/GuidedTour';
 
 function App() {
   useKeyboardShortcuts();
@@ -63,6 +64,7 @@ function App() {
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
       {/* Tooltips and Toasts */}
       <WelcomeModal />
+      <GuidedTour />
       <Toaster position="bottom-right" toastOptions={{ style: { background: '#333', color: '#fff' } }} />
       <Toolbar 
         leftOpen={leftOpen} setLeftOpen={setLeftOpen} 

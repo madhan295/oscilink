@@ -79,7 +79,7 @@ export function RightPanel({ editorRef }: RightPanelProps) {
       {/* Tab Content */}
       <div className="flex-1 overflow-hidden relative bg-[#1A1B26]">
         {/* Render Code Editor but hide it when inactive to preserve state */}
-        <div className={`absolute inset-0 flex flex-col ${activeTab === 'code' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
+        <div id="tour-code-editor" className={`absolute inset-0 flex flex-col ${activeTab === 'code' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
           <CodeEditor ref={editorRef} />
         </div>
 

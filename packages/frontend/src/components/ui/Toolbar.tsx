@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PanelLeft, PanelRight, Play, Loader2, Square, RotateCcw, Cpu, User, Settings, ChevronDown, FileCode2, FolderOpen, Save, AlertTriangle, AlertCircle } from 'lucide-react';
+import { PanelLeft, PanelRight, Play, Loader2, Square, RotateCcw, Cpu, ChevronDown, FileCode2, FolderOpen, Save, AlertTriangle, AlertCircle, User } from 'lucide-react';
 import { UndoRedoButtons } from './UndoRedoButtons';
 import { useCompiler } from '../../hooks/useCompiler';
 import { useSimulation } from '../../hooks/useSimulation';
+import { HelpMenu } from './HelpMenu';
+import { Tooltip } from './Tooltip';
 import { useEditorStore } from '../../store/editorStore';
 import { useSimulationStore } from '../../store/simulationStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { CodeEditorRef } from '../editor/CodeEditor';
 import toast from 'react-hot-toast';
 import { Button } from './Button';
-import { Tooltip } from './Tooltip';
 import { clsx } from 'clsx';
 
 interface ToolbarProps {
@@ -117,9 +118,9 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
 
         {/* Action Group */}
         <div className="flex items-center gap-2">
-          {/* Compile/Run Split Button */}
-          <div className="relative flex items-stretch" ref={dropdownRef}>
-            <Tooltip position="bottom" content="Compile Code">
+          {/* Compile Dropdown trigger */}
+          <div className="relative flex items-center" id="tour-run-button" ref={dropdownRef}>
+            <Tooltip position="bottom" content="Compile and Run (Shift+Enter)">
               <Button
                 variant="primary"
                 onClick={handleCompile}
@@ -223,11 +224,7 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
             </Button>
           </Tooltip>
           
-          <Tooltip position="bottom" content="Settings">
-            <Button variant="ghost" size="sm" className="px-2">
-              <Settings size={16} />
-            </Button>
-          </Tooltip>
+          <HelpMenu />
 
           <Tooltip position="bottom" content="User Profile">
             <div className="ml-2 w-7 h-7 rounded-full bg-primary/20 text-primary flex items-center justify-center border border-primary/30 cursor-pointer hover:bg-primary/30 transition-colors">
