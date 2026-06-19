@@ -194,7 +194,7 @@ export const ComponentPalette: React.FC = () => {
         </div>
 
         {/* Component List */}
-        <div className="flex-1 overflow-y-auto p-2 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
           {filteredCategories.length === 0 ? (
             <div className="text-center text-text-muted text-sm mt-8">
               No components found

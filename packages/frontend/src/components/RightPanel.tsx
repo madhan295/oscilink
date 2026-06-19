@@ -84,7 +84,7 @@ export function RightPanel({ editorRef }: RightPanelProps) {
         </div>
 
         {activeTab === 'problems' && (
-          <div className="absolute inset-0 overflow-y-auto">
+          <div className="absolute inset-0 overflow-y-auto custom-scrollbar">
             <ProblemsPanel editorRef={editorRef} />
           </div>
         )}

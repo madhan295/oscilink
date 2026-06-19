@@ -62,7 +62,7 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
         )}
       </div>
 
-      <div className="overflow-y-auto flex-1 p-2 space-y-2">
+      <div className="overflow-y-auto flex-1 p-2 space-y-2 custom-scrollbar">
         {/* Circuit Errors Section */}
         {sortedCircuitErrors.length > 0 && (
           <div className="border border-border rounded bg-background overflow-hidden">

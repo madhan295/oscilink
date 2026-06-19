@@ -194,7 +194,7 @@ export const SerialMonitor: React.FC = () => {
       {/* Output Area */}
       <div 
         ref={outputRef}
-        className="flex-1 overflow-y-auto bg-[#1E1E1E] text-text p-2 font-mono text-[12px]"
+        className="flex-1 overflow-y-auto bg-[#1E1E1E] text-text p-2 font-mono text-[12px] custom-scrollbar"
       >
         {renderedLines.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-text-muted opacity-50">
