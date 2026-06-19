@@ -80,7 +80,7 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
   const statusDisplay = getStatusDisplay();
 
   return (
-    <header className="h-14 min-h-[56px] bg-surface border-b border-border-default flex items-center justify-between px-4 overflow-hidden">
+    <header className="h-14 min-h-[56px] bg-surface border-b border-border-default flex items-center justify-between px-4">
       {/* Left Section: Logo */}
       <div className="flex items-center gap-3 w-[240px] flex-shrink-0">
         <div className="bg-primary/10 p-1.5 rounded-md text-primary">
