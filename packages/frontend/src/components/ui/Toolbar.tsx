@@ -80,9 +80,9 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
   const statusDisplay = getStatusDisplay();
 
   return (
-    <header className="h-14 min-h-[56px] bg-surface border-b border-border-default flex items-center justify-between px-4">
+    <header className="h-14 min-h-[56px] bg-surface border-b border-border-default flex items-center justify-between px-4 overflow-hidden">
       {/* Left Section: Logo */}
-      <div className="flex items-center gap-3 w-[240px]">
+      <div className="flex items-center gap-3 w-[240px] flex-shrink-0">
         <div className="bg-primary/10 p-1.5 rounded-md text-primary">
           <Cpu size={20} />
         </div>
@@ -90,9 +90,9 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
       </div>
       
       {/* Center Section: Actions */}
-      <div className="flex items-center gap-4 flex-1 justify-center">
+      <div className="flex items-center gap-4 flex-1 justify-center min-w-max px-4">
         {/* File Operations */}
-        <div className="flex items-center gap-1 bg-elevated p-1 rounded-md border border-border-subtle">
+        <div className="flex items-center gap-1 bg-elevated p-1 rounded-md border border-border-subtle flex-shrink-0">
           <Tooltip position="bottom" content="New Project" shortcut="Ctrl+N">
             <Button variant="ghost" size="sm" className="px-2" onClick={() => toast('New project feature coming soon')}>
               <FileCode2 size={16} />
@@ -183,7 +183,7 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
       </div>
 
       {/* Right Section: Status & Tools */}
-      <div className="flex items-center justify-end gap-4 w-[240px]">
+      <div className="flex items-center justify-end gap-4 w-[240px] flex-shrink-0">
         {/* Connection Status */}
         <div className="flex items-center gap-2 px-3 py-1.5 bg-elevated rounded-full border border-border-subtle shadow-sm">
           {statusDisplay.dot}
