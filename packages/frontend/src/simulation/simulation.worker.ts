@@ -54,9 +54,12 @@ const lcdControllers: Record<string, HD44780> = {};
 
 // Simulated distance for ultrasonic sensor (in cm)
 let simulatedDistanceCm = 50;
+let simulatedTempCelsius = 25.0;
+let simulatedHumidity = 60;
 
 // Track TRIG pin state per sensor component
 const trigState: Record<string, boolean> = {};
+const dhtLowCycle: Record<string, number> = {};
 
 // Runtime monitoring
 let simulationStartTime = 0;
@@ -153,8 +156,8 @@ function stopSimulation() {
   pendingUpdates = {};
   scheduledPinToggles.length = 0;
   nextToggleCycle = Infinity;
-  for (const key in pinHighTicks) delete pinHighTicks[key];
   for (const key in lcdControllers) delete lcdControllers[key];
+  for (const key in dhtLowCycle) delete dhtLowCycle[key];
   simulationStartTime = 0;
   lastActivityTime = 0;
   stackWarningPosted = false;
@@ -307,6 +310,79 @@ function handlePinChange(pinName: string, voltage: number) {
   // Track TRIG state
   trigState[pinName] = voltage > 2.5;
 
+  // DHT11 SENSOR SIMULATION
+  if (circuitGraph) {
+    if (voltage < 2.5) {
+      if (!dhtLowCycle[pinName] && avrRunner) {
+        dhtLowCycle[pinName] = avrRunner.cpu.cycles;
+      }
+    } else {
+      if (dhtLowCycle[pinName] && avrRunner) {
+        const cyclesLow = avrRunner.cpu.cycles - dhtLowCycle[pinName];
+        dhtLowCycle[pinName] = 0;
+
+        // MCU start signal is ~18ms (288,000 cycles at 16MHz). Check for > 10ms (160,000 cycles).
+        if (cyclesLow > 160000) {
+          let arduinoId = null;
+          for (const [id, comp] of circuitGraph.components.entries()) {
+            if (comp.type === 'ARDUINO_UNO') { arduinoId = id; break; }
+          }
+
+          if (arduinoId) {
+            const connectedComponents = circuitGraph.getConnectedComponents(arduinoId, pinName);
+            for (const comp of connectedComponents) {
+              if (comp.type === 'TEMPERATURE_SENSOR') {
+                // Generate 40-bit DHT response
+                const tempInt = Math.floor(simulatedTempCelsius);
+                const tempDec = Math.round((simulatedTempCelsius - tempInt) * 10);
+                const humInt = Math.floor(simulatedHumidity);
+                const humDec = Math.round((simulatedHumidity - humInt) * 10);
+                const checksum = (tempInt + tempDec + humInt + humDec) & 0xFF;
+
+                const dataBits: boolean[] = [];
+                const pushByte = (b: number) => {
+                  for (let i = 7; i >= 0; i--) {
+                    dataBits.push(((b >> i) & 1) === 1);
+                  }
+                };
+                pushByte(humInt);
+                pushByte(humDec);
+                pushByte(tempInt);
+                pushByte(tempDec);
+                pushByte(checksum);
+
+                // Delay 40us before response
+                let currentCycle = avrRunner.cpu.cycles + 40 * 16;
+                
+                // DHT response 80us LOW, 80us HIGH
+                scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: false });
+                currentCycle += 80 * 16;
+                scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: true });
+                currentCycle += 80 * 16;
+
+                // 40 bits of data
+                for (const bit of dataBits) {
+                  scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: false });
+                  currentCycle += 50 * 16; // 50us LOW
+                  scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: true });
+                  currentCycle += (bit ? 70 : 28) * 16; // 70us HIGH for '1', 28us HIGH for '0'
+                }
+
+                // End of transmission (50us LOW) then return to floating HIGH
+                scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: false });
+                currentCycle += 50 * 16;
+                scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: true });
+
+                nextToggleCycle = Math.min(nextToggleCycle, avrRunner.cpu.cycles + 40 * 16);
+                postMessage({ type: 'SERIAL_OUTPUT', payload: { text: `[SIM] DHT11 responding on ${pinName}\n` } });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   if (circuitGraph) {
     // 1. Find the real Arduino ID in the graph
     let arduinoId = null;
@@ -380,6 +456,15 @@ function handlePinChange(pinName: string, voltage: number) {
               cursorVisible: lcd.cursorOn || lcd.blinkOn
             });
           }
+        } else if (comp.type === 'TEMPERATURE_SENSOR') {
+          const vccVoltage = circuitGraph.getNodeVoltage(id, 'VCC');
+          const isActive = vccVoltage > 2.5;
+          queueComponentUpdate(id, {
+            isActive,
+            temperatureCelsius: simulatedTempCelsius,
+            temperatureFahrenheit: simulatedTempCelsius * 9/5 + 32,
+            humidity: simulatedHumidity
+          });
         }
       }
 
@@ -644,6 +729,11 @@ self.onmessage = function (e) {
           avrRunner.usart.writeByte(payload.text.charCodeAt(i));
         }
       }
+      break;
+
+    case 'SET_SENSOR_VALUES':
+      if (payload.temperature !== undefined) simulatedTempCelsius = payload.temperature;
+      if (payload.humidity !== undefined) simulatedHumidity = payload.humidity;
       break;
 
     case 'SET_SENSOR_DISTANCE':

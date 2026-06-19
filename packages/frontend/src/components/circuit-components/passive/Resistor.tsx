@@ -100,27 +100,27 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
           }}
           onMouseDown={(e) => onPinMouseDown(e, pin.id)}
         >
-          <Circle x={0} y={0} radius={8} fill="transparent" />
-          <Rect
-            x={isHovered ? -2.8 : -2}
-            y={isHovered ? -2.8 : -2}
-            width={isHovered ? 5.6 : 4}
-            height={isHovered ? 5.6 : 4}
-            fill="#1a1a1a"
-            stroke={isHovered ? '#fbbf24' : '#404040'}
-            strokeWidth={isHovered ? 1 : 0.5}
-            cornerRadius={0.5}
-            shadowColor={isHovered ? '#fbbf24' : 'transparent'}
-            shadowBlur={isHovered ? 5 : 0}
-          />
+          <Circle x={0} y={0} radius={6} fill="transparent" />
           <Circle
             x={0} y={0}
-            radius={isHovered ? 1.6 : 1}
-            fill="#171717"
-            shadowColor="transparent"
-            shadowBlur={0}
+            radius={isHovered ? 2.5 : 1.5}
+            fill={isHovered ? '#fbbf24' : '#171717'}
+            stroke={isHovered ? '#fbbf24' : '#404040'}
+            strokeWidth={isHovered ? 1 : 0.5}
           />
-        </Group>
+          {isHovered && (
+            <Group x={-12} y={8}>
+              <Rect width={24} height={10} fill="#1f2937" cornerRadius={2} opacity={0.9} />
+              <Text
+                text={pin.label}
+                width={24} height={10}
+                align="center" verticalAlign="middle"
+                fontSize={6} fill="#fbbf24"
+                fontFamily="monospace" fontStyle="bold"
+              />
+            </Group>
+          )}
+      </Group>
       );
     });
   };

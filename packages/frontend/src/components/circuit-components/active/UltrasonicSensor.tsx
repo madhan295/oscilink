@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
+import React, { useState, useContext } from 'react';
 import { Group, Rect, Circle, Text, Line } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
@@ -14,7 +13,7 @@ const COMMONLY_USED_PINS = ['VCC', 'TRIG', 'ECHO', 'GND'];
 
 export const UltrasonicSensor: React.FC<UltrasonicSensorProps> = ({ component }) => {
   const [hoveredPin, setHoveredPin] = useState<string | null>(null);
-  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
+  const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = useContext(CanvasContext);
 
   const handleDragStart = () => {
     useWorkspaceStore.getState().pushHistory();
@@ -113,7 +112,7 @@ export const UltrasonicSensor: React.FC<UltrasonicSensorProps> = ({ component })
     >
       <Group x={-52} y={-58}>
         <Rect width={104} height={48} fill="#115268" cornerRadius={2} />
-        
+
         {/* Mounting Holes */}
         <Circle x={6} y={42} radius={3.5} fill="#ffffff" />
         <Circle x={98} y={6} radius={3.5} fill="#ffffff" />
@@ -143,7 +142,7 @@ export const UltrasonicSensor: React.FC<UltrasonicSensorProps> = ({ component })
           <Rect x={1} y={0} width={2.5} height={1.5} fill="#111827" />
           <Rect x={3.5} y={0} width={1} height={1.5} fill="#d1d5db" />
         </Group>
-        
+
         {/* Bottom Left near pins */}
         <Group x={40.5} y={32}>
           <Rect x={0} y={0} width={1.5} height={1} fill="#d1d5db" />
@@ -160,21 +159,21 @@ export const UltrasonicSensor: React.FC<UltrasonicSensorProps> = ({ component })
 
         {/* Left Transducer */}
         <Group x={22} y={24}>
-          <Circle 
-            radius={19} 
+          <Circle
+            radius={19}
             fillLinearGradientStartPoint={{ x: -19, y: -19 }}
             fillLinearGradientEndPoint={{ x: 19, y: 19 }}
             fillLinearGradientColorStops={[0, '#f3f4f6', 1, '#9ca3af']}
           />
           <Circle radius={14} fill="#374151" />
-          <Circle 
-            radius={13} 
+          <Circle
+            radius={13}
             fillLinearGradientStartPoint={{ x: -13, y: -13 }}
             fillLinearGradientEndPoint={{ x: 13, y: 13 }}
             fillLinearGradientColorStops={[0, '#a3a629', 1, '#70731a']}
           />
-          <Circle 
-            radius={9} 
+          <Circle
+            radius={9}
             fillLinearGradientStartPoint={{ x: -9, y: -9 }}
             fillLinearGradientEndPoint={{ x: 9, y: 9 }}
             fillLinearGradientColorStops={[0, '#6b7280', 1, '#d1d5db']}
@@ -183,21 +182,21 @@ export const UltrasonicSensor: React.FC<UltrasonicSensorProps> = ({ component })
 
         {/* Right Transducer */}
         <Group x={82} y={24}>
-          <Circle 
-            radius={19} 
+          <Circle
+            radius={19}
             fillLinearGradientStartPoint={{ x: -19, y: -19 }}
             fillLinearGradientEndPoint={{ x: 19, y: 19 }}
             fillLinearGradientColorStops={[0, '#f3f4f6', 1, '#9ca3af']}
           />
           <Circle radius={14} fill="#374151" />
-          <Circle 
-            radius={13} 
+          <Circle
+            radius={13}
             fillLinearGradientStartPoint={{ x: -13, y: -13 }}
             fillLinearGradientEndPoint={{ x: 13, y: 13 }}
             fillLinearGradientColorStops={[0, '#a3a629', 1, '#70731a']}
           />
-          <Circle 
-            radius={9} 
+          <Circle
+            radius={9}
             fillLinearGradientStartPoint={{ x: -9, y: -9 }}
             fillLinearGradientEndPoint={{ x: 9, y: 9 }}
             fillLinearGradientColorStops={[0, '#6b7280', 1, '#d1d5db']}
@@ -210,7 +209,7 @@ export const UltrasonicSensor: React.FC<UltrasonicSensorProps> = ({ component })
           <Line points={[5, 0, 5, 18]} stroke="#ffffff" strokeWidth={0.5} />
           <Line points={[10, 0, 10, 18]} stroke="#ffffff" strokeWidth={0.5} />
           <Line points={[15, 0, 15, 18]} stroke="#ffffff" strokeWidth={0.5} />
-          
+
           <Group x={1.5} y={15} rotation={-90}><Text text="VCC" fontSize={3} fill="#ffffff" /></Group>
           <Group x={6.5} y={15} rotation={-90}><Text text="TRIG" fontSize={2.8} fill="#ffffff" /></Group>
           <Group x={11.5} y={15} rotation={-90}><Text text="ECHO" fontSize={2.8} fill="#ffffff" /></Group>
@@ -239,7 +238,7 @@ export const UltrasonicSensor: React.FC<UltrasonicSensorProps> = ({ component })
           <Rect x={0} y={0} width={3} height={6} fill="#4b5563" />
           <Rect x={0} y={1} width={3} height={4} fill="#111827" />
         </Group>
-        
+
         {/* Metal Pins */}
         <Rect x={44} y={51} width={1} height={7} fill="#d1d5db" />
         <Rect x={49} y={51} width={1} height={7} fill="#d1d5db" />
@@ -251,6 +250,3 @@ export const UltrasonicSensor: React.FC<UltrasonicSensorProps> = ({ component })
     </Group>
   );
 };
-
-
-

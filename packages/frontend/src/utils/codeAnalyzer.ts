@@ -140,6 +140,7 @@ export function analyzeCode(code: string): CodeIssue[] {
 
     // CHECK MISSING_SEMICOLON_HINT
     if (trim.endsWith(')') && 
+        !trim.startsWith('//') &&
         trim.indexOf('if') !== 0 && 
         trim.indexOf('for') !== 0 && 
         trim.indexOf('while') !== 0 && 

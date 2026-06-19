@@ -33,7 +33,7 @@ export const getComponentBounds = (comp: CircuitComponent) => {
       width = 64; height = 72; offsetX = -12; offsetY = -32;
       break;
     case 'TEMPERATURE_SENSOR':
-      width = 50; height = 50; offsetX = -5; offsetY = -5;
+      width = 50; height = 66; offsetX = -25; offsetY = -66;
       break;
     case 'LCD_16X2':
       width = 176; height = 92; offsetX = -12; offsetY = -72;

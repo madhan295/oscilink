@@ -173,6 +173,13 @@ class SimulationManager {
     });
   }
 
+  public setSensorValues(temperature: number, humidity: number) {
+    this.worker?.postMessage({
+      type: 'SET_SENSOR_VALUES',
+      payload: { temperature, humidity }
+    });
+  }
+
   public destroy() {
     this.stop();
     this.worker?.terminate();

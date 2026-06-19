@@ -12,6 +12,7 @@ import { ErrorPanel } from './components/ui/ErrorPanel';
 import { setupAutoSave, deserializeProject } from './utils/projectSerializer';
 import { WelcomeModal } from './components/ui/WelcomeModal';
 import { GuidedTour } from './components/ui/GuidedTour';
+import { SensorValuesControl } from './components/ui/SensorValuesControl';
 
 function App() {
   useKeyboardShortcuts();
@@ -102,6 +103,7 @@ function App() {
       )}
       
       <SensorDistanceControl />
+      <SensorValuesControl />
     </div>
   );
 }

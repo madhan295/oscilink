@@ -16,6 +16,7 @@ import { Buzzer } from '../circuit-components/active/Buzzer';
 import { LCD16x2 } from '../circuit-components/active/LCD16x2';
 import { UltrasonicSensor } from '../circuit-components/active/UltrasonicSensor';
 import { Relay } from '../circuit-components/active/Relay';
+import { TemperatureSensor } from '../circuit-components/active/TemperatureSensor';
 
 const FallbackComponent = ({ component }: { component: CircuitComponent }) => (
   <Group x={component.position.x} y={component.position.y} rotation={component.rotation}>
@@ -36,8 +37,8 @@ const ComponentRouter = ({ component }: { component: CircuitComponent }) => {
     case 'LCD_16X2': return <LCD16x2 component={component} />;
     case 'ULTRASONIC_SENSOR': return <UltrasonicSensor component={component} />;
     case 'RELAY': return <Relay component={component} />;
+    case 'TEMPERATURE_SENSOR': return <TemperatureSensor component={component} />;
     // Render fallback for un-implemented types
-    case 'TEMPERATURE_SENSOR':
     case 'BREADBOARD':
     default: return <FallbackComponent component={component} />;
   }

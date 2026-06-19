@@ -210,10 +210,10 @@ export function createComponent(type: ComponentType, position: Point): CircuitCo
     }
 
     case 'TEMPERATURE_SENSOR': {
-      pins['VCC'] = createPin('VCC', 'VCC', 'power', 'input', { x: 10, y: 40 });
-      pins['DATA'] = createPin('DATA', 'DAT', 'digital', 'bidirectional', { x: 25, y: 40 });
-      pins['GND'] = createPin('GND', 'GND', 'ground', 'input', { x: 40, y: 40 });
-      properties = { type: 'DHT11' };
+      pins['VCC'] = createPin('VCC', 'VCC', 'power', 'input', { x: -14, y: 0 });
+      pins['DATA'] = createPin('DATA', 'DAT', 'digital', 'bidirectional', { x: 0, y: 0 });
+      pins['GND'] = createPin('GND', 'GND', 'ground', 'input', { x: 14, y: 0 });
+      properties = { type: 'DHT11', simulatedTemp: 25.0, simulatedHumidity: 60 };
       break;
     }
 

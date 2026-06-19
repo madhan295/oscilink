@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
+
 import { Group, Rect, Circle, Text } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
@@ -119,7 +119,7 @@ export const LCD16x2: React.FC<LCDProps> = ({ component }) => {
               <Circle
                 x={0} y={0}
                 radius={isHovered ? 2.5 : 1.5}
-                fill="#171717"
+                fill={isHovered ? '#fbbf24' : '#171717'}
                 stroke={isHovered ? '#fbbf24' : '#404040'}
                 strokeWidth={isHovered ? 1 : 0.5}
               />

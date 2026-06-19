@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
+import React, { useState } from 'react';
 import { Group, Rect, Circle, Text, Line } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
@@ -84,24 +83,26 @@ export const Relay: React.FC<RelayProps> = ({ component }) => {
 
           {isCommon && (
             <Group x={0} y={0}>
-              <Circle x={0} y={0} radius={8} fill="transparent" />
+              <Circle x={0} y={0} radius={6} fill="transparent" />
               <Circle
                 x={0} y={0}
                 radius={isHovered ? 2.5 : 1.5}
-                fill="#171717"
+                fill={isHovered ? '#fbbf24' : '#171717'}
                 stroke={isHovered ? '#fbbf24' : '#404040'}
                 strokeWidth={isHovered ? 1 : 0.5}
-                shadowColor={isHovered ? '#fbbf24' : 'transparent'}
-                shadowBlur={isHovered ? 5 : 0}
               />
-              <Text 
-                text={pin.id === 'IN' ? 'Signal Pin' : pin.id === 'VCC' ? 'VCC' : pin.id === 'GND' ? 'GND' : pin.id} 
-                visible={isHovered}
-                x={-20} y={isTopSide ? -10 : 6} 
-                width={40} align="center" 
-                fontSize={7} fontFamily="sans-serif" fontStyle="bold"
-                fill="#374151" opacity={0.85}
-              />
+              {isHovered && (
+                <Group x={-12} y={8}>
+                  <Rect width={24} height={10} fill="#1f2937" cornerRadius={2} opacity={0.9} />
+                  <Text
+                    text={pin.label}
+                    width={24} height={10}
+                    align="center" verticalAlign="middle"
+                    fontSize={6} fill="#fbbf24"
+                    fontFamily="monospace" fontStyle="bold"
+                  />
+                </Group>
+              )}
             </Group>
           )}
         </Group>
