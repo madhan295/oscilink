@@ -38,6 +38,8 @@ A highly rigid factory architecture (`componentFactory.ts`) ensuring flawless in
   - `LED`: Interpolates physical brightness based on the engine's `simulationStore` state. Emits a realistic glow effect when powered.
   - `Resistor`: Procedurally generated color bands calculated dynamically based on its `resistance` property.
   - `PushButton`: Fully interactive with visual pressing animations, triggering immediate events to the simulation core.
+  - `TemperatureSensor` (DHT11): Features a custom UI panel with sliders to dynamically adjust simulated temperature and humidity values.
+  - `Cycle-Accurate Protocol Simulation`: The backend Web Worker natively simulates complex bit-banged 1-wire protocols (like the DHT11's 40-bit handshake) cycle-by-cycle directly into the `avr8js` CPU scheduler, allowing actual C++ sensor libraries to successfully communicate with simulated components.
 
 ### 7. Advanced Rendering Layers & Wiring
 A strictly ordered Konva rendering stack to guarantee 60fps performance during complex interactions:
