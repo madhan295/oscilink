@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useComponentDropAnimation } from '../../../hooks/useComponentDropAnimation';
-import { Group, Rect, Line, Circle, Text } from 'react-konva';
+import { Group, Rect, Line, Circle, Text, Shape } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
@@ -39,7 +39,6 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
 
   const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
 
-
   const handleDragStart = () => {
     useWorkspaceStore.getState().pushHistory();
   };
@@ -63,16 +62,6 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
 
   const resistance = Number(component.properties?.resistance || 220);
   const bands = getResistorBands(resistance);
-
-  let resistanceLabel = `${resistance}Ω`;
-  if (resistance >= 1e9) resistanceLabel = `${Number((resistance / 1e9).toPrecision(5))}GΩ`;
-  else if (resistance >= 1e6) resistanceLabel = `${Number((resistance / 1e6).toPrecision(5))}MΩ`;
-  else if (resistance >= 1e3) resistanceLabel = `${Number((resistance / 1e3).toPrecision(5))}kΩ`;
-  else if (resistance >= 1) resistanceLabel = `${Number(resistance.toPrecision(5))}Ω`;
-  else if (resistance >= 1e-3) resistanceLabel = `${Number((resistance / 1e-3).toPrecision(5))}mΩ`;
-  else if (resistance >= 1e-6) resistanceLabel = `${Number((resistance / 1e-6).toPrecision(5))}µΩ`;
-  else if (resistance >= 1e-9) resistanceLabel = `${Number((resistance / 1e-9).toPrecision(5))}nΩ`;
-  else if (resistance > 0) resistanceLabel = `${Number((resistance / 1e-12).toPrecision(5))}pΩ`;
 
   const renderPins = () => {
     return Object.values(component.pins).map((pin) => {
@@ -132,7 +121,8 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
       onClick={handleClick}
       onTap={handleClick}
     >
-      <Rect x={-5} y={-5} width={70} height={35} fill="transparent" />
+      <Rect x={-5} y={-5} width={70} height={35} fill="transparent" listening={false} />
+
       {/* Leads */}
       <Group listening={false}>
         <Line points={[0, 10, 8, 10]} stroke="#C0C0C0" strokeWidth={2} />
@@ -141,36 +131,93 @@ export const Resistor: React.FC<ResistorProps> = ({ component }) => {
 
       {/* Body */}
       <Group x={8} y={3}>
-        <Rect
-          x={0} y={0}
-          width={44} height={14}
-          fill="#f5d098"
-          stroke="#c79958"
+        {/* Base Body Shape */}
+        <Shape
+          sceneFunc={(context, shape) => {
+            context.beginPath();
+            context.moveTo(7, 0);
+            context.lineTo(10, 0);
+            context.bezierCurveTo(12, 0, 13, 2, 15, 2);
+            context.lineTo(29, 2);
+            context.bezierCurveTo(31, 2, 32, 0, 34, 0);
+            context.lineTo(37, 0);
+            context.arc(37, 7, 7, -Math.PI / 2, Math.PI / 2);
+            context.lineTo(34, 14);
+            context.bezierCurveTo(32, 14, 31, 12, 29, 12);
+            context.lineTo(15, 12);
+            context.bezierCurveTo(13, 12, 12, 14, 10, 14);
+            context.lineTo(7, 14);
+            context.arc(7, 7, 7, Math.PI / 2, Math.PI * 1.5);
+            context.closePath();
+            context.fillStrokeShape(shape);
+          }}
+          fill="#dcb285"
+          stroke="#b68c5b"
           strokeWidth={1}
-          cornerRadius={4}
+          shadowColor="rgba(0,0,0,0.15)"
+          shadowBlur={3}
+          shadowOffsetY={1}
         />
-        {/* Bands: 20%, 35%, 50%, 80% */}
-        <Rect x={44 * 0.2} y={0} width={4} height={14} fill={bands[0]} />
-        <Rect x={44 * 0.35} y={0} width={4} height={14} fill={bands[1]} />
-        <Rect x={44 * 0.5} y={0} width={4} height={14} fill={bands[2]} />
-        <Rect x={44 * 0.8} y={0} width={4} height={14} fill={bands[3]} />
-      </Group>
 
-      {/* Resistance Label */}
-      <Text
-        text={resistanceLabel}
-        x={0} y={20}
-        width={60}
-        align="center"
-        fontSize={9}
-        fontFamily="sans-serif"
-        fill="#374151"
-        listening={false}
-      />
+        {/* Color Bands */}
+        <Group
+          clipFunc={(context) => {
+            context.beginPath();
+            context.moveTo(7, 0);
+            context.lineTo(10, 0);
+            context.bezierCurveTo(12, 0, 13, 2, 15, 2);
+            context.lineTo(29, 2);
+            context.bezierCurveTo(31, 2, 32, 0, 34, 0);
+            context.lineTo(37, 0);
+            context.arc(37, 7, 7, -Math.PI / 2, Math.PI / 2);
+            context.lineTo(34, 14);
+            context.bezierCurveTo(32, 14, 31, 12, 29, 12);
+            context.lineTo(15, 12);
+            context.bezierCurveTo(13, 12, 12, 14, 10, 14);
+            context.lineTo(7, 14);
+            context.arc(7, 7, 7, Math.PI / 2, Math.PI * 1.5);
+            context.closePath();
+          }}
+        >
+          <Rect x={7} y={0} width={4} height={14} fill={bands[0]} />
+          <Rect x={15} y={0} width={4} height={14} fill={bands[1]} />
+          <Rect x={23} y={0} width={4} height={14} fill={bands[2]} />
+          <Rect x={33} y={0} width={4} height={14} fill={bands[3]} />
+        </Group>
+
+        {/* 3D Highlight/Shadow Overlay */}
+        <Shape
+          sceneFunc={(context, shape) => {
+            context.beginPath();
+            context.moveTo(7, 0);
+            context.lineTo(10, 0);
+            context.bezierCurveTo(12, 0, 13, 2, 15, 2);
+            context.lineTo(29, 2);
+            context.bezierCurveTo(31, 2, 32, 0, 34, 0);
+            context.lineTo(37, 0);
+            context.arc(37, 7, 7, -Math.PI / 2, Math.PI / 2);
+            context.lineTo(34, 14);
+            context.bezierCurveTo(32, 14, 31, 12, 29, 12);
+            context.lineTo(15, 12);
+            context.bezierCurveTo(13, 12, 12, 14, 10, 14);
+            context.lineTo(7, 14);
+            context.arc(7, 7, 7, Math.PI / 2, Math.PI * 1.5);
+            context.closePath();
+            context.fillStrokeShape(shape);
+          }}
+          fillLinearGradientStartPoint={{ x: 0, y: 0 }}
+          fillLinearGradientEndPoint={{ x: 0, y: 14 }}
+          fillLinearGradientColorStops={[
+            0, 'rgba(0,0,0,0.15)',
+            0.3, 'rgba(255,255,255,0.4)',
+            0.6, 'rgba(255,255,255,0)',
+            1, 'rgba(0,0,0,0.25)'
+          ]}
+          listening={false}
+        />
+      </Group>
 
       {renderPins()}
     </Group>
   );
 };
-
-

@@ -88,3 +88,8 @@ export const useSimulationStore = create<SimulationStore>()(
     { name: 'simulation-store', enabled: (import.meta as any).env ? (import.meta as any).env.DEV : true }
   )
 );
+
+// Expose store to window for debugging and testing
+if (typeof window !== 'undefined') {
+  (window as any).__simulationStore = useSimulationStore;
+}

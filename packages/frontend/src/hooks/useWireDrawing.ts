@@ -30,34 +30,29 @@ export const useWireDrawing = () => {
       }
     } else {
       if (wireDrawingFrom?.componentId !== pinRef.componentId || wireDrawingFrom?.pinId !== pinRef.pinId) {
-        if (wireDrawingFrom?.componentId !== pinRef.componentId) {
-          // Finish drawing
-          if (previewWirePoints) {
-            // Recompute final points to exact pin positions
-            const startComp = components.find(c => c.id === wireDrawingFrom!.componentId);
-            const startPin = startComp?.pins[wireDrawingFrom!.pinId];
-            const endComp = components.find(c => c.id === pinRef.componentId);
-            const endPin = endComp?.pins[pinRef.pinId];
+        // Finish drawing
+        if (previewWirePoints) {
+          // Recompute final points to exact pin positions
+          const startComp = components.find(c => c.id === wireDrawingFrom!.componentId);
+          const startPin = startComp?.pins[wireDrawingFrom!.pinId];
+          const endComp = components.find(c => c.id === pinRef.componentId);
+          const endPin = endComp?.pins[pinRef.pinId];
+          
+          if (startComp && startPin && endComp && endPin) {
+            const startPos = getAbsolutePinPosition(startComp, startPin);
+            const endPos = getAbsolutePinPosition(endComp, endPin);
             
-            if (startComp && startPin && endComp && endPin) {
-              const startPos = getAbsolutePinPosition(startComp, startPin);
-              const endPos = getAbsolutePinPosition(endComp, endPin);
-              
-              const points = [startPos.x, startPos.y];
-              intermediatePoints.forEach(p => {
-                points.push(p.x, p.y);
-              });
-              points.push(endPos.x, endPos.y);
-              
-              finishWireDrawing(pinRef, points);
-            } else {
-              cancelWireDrawing();
-            }
+            const points = [startPos.x, startPos.y];
+            intermediatePoints.forEach(p => {
+              points.push(p.x, p.y);
+            });
+            points.push(endPos.x, endPos.y);
+            
+            finishWireDrawing(pinRef, points);
           } else {
             cancelWireDrawing();
           }
         } else {
-          // Same component, cancel
           cancelWireDrawing();
         }
       } else {

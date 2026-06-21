@@ -233,10 +233,42 @@ export function createComponent(type: ComponentType, position: Point): CircuitCo
     }
 
     case 'BREADBOARD': {
-      pins['TOP_POS'] = createPin('TOP_POS', '+', 'power', 'bidirectional', { x: 10, y: 0 });
-      pins['TOP_NEG'] = createPin('TOP_NEG', '-', 'ground', 'bidirectional', { x: 10, y: 15 });
-      pins['BOTTOM_POS'] = createPin('BOTTOM_POS', '+', 'power', 'bidirectional', { x: 10, y: 105 });
-      pins['BOTTOM_NEG'] = createPin('BOTTOM_NEG', '-', 'ground', 'bidirectional', { x: 10, y: 120 });
+      // Top power rail holes
+      for (let col = 0; col < 30; col++) {
+        const x = 18 + col * 10;
+        pins[`TP_${col}`] = createPin(`TP_${col}`, 'TP', 'power', 'bidirectional', { x, y: 10 });
+        pins[`TN_${col}`] = createPin(`TN_${col}`, 'TN', 'ground', 'bidirectional', { x, y: 22 });
+      }
+
+      // Top main grid holes
+      const topRowLabels = ['A', 'B', 'C', 'D', 'E'];
+      const topRowYs = [38, 48, 58, 68, 78];
+      topRowYs.forEach((rowY, rIdx) => {
+        const rowLabel = topRowLabels[rIdx];
+        for (let col = 0; col < 30; col++) {
+          const pinId = `T_${col}_${rowLabel}`;
+          pins[pinId] = createPin(pinId, pinId, 'digital', 'bidirectional', { x: 18 + col * 10, y: rowY });
+        }
+      });
+
+      // Bottom main grid holes
+      const bottomRowLabels = ['F', 'G', 'H', 'I', 'J'];
+      const bottomRowYs = [100, 110, 120, 130, 140];
+      bottomRowYs.forEach((rowY, rIdx) => {
+        const rowLabel = bottomRowLabels[rIdx];
+        for (let col = 0; col < 30; col++) {
+          const pinId = `B_${col}_${rowLabel}`;
+          pins[pinId] = createPin(pinId, pinId, 'digital', 'bidirectional', { x: 18 + col * 10, y: rowY });
+        }
+      });
+
+      // Bottom power rail holes
+      for (let col = 0; col < 30; col++) {
+        const x = 18 + col * 10;
+        pins[`BP_${col}`] = createPin(`BP_${col}`, 'BP', 'power', 'bidirectional', { x, y: 156 });
+        pins[`BN_${col}`] = createPin(`BN_${col}`, 'BN', 'ground', 'bidirectional', { x, y: 168 });
+      }
+
       properties = { rows: 10, columns: 30 };
       break;
     }

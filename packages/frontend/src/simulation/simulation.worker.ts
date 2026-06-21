@@ -234,6 +234,17 @@ function flushUpdates() {
   }
 }
 
+function broadcastVoltageUpdates(updatedNodes: Map<string, number>) {
+  for (const [nodeId, voltage] of updatedNodes.entries()) {
+    const dotIdx = nodeId.indexOf('.');
+    if (dotIdx > 0) {
+      const compId = nodeId.substring(0, dotIdx);
+      const pinId = nodeId.substring(dotIdx + 1);
+      postMessage({ type: 'PIN_CHANGE', payload: { componentId: compId, pinId, voltage } });
+    }
+  }
+}
+
 function handlePinChange(pinName: string, voltage: number) {
   registerActivity();
   // Always notify UI for Arduino visual pins
@@ -393,7 +404,8 @@ function handlePinChange(pinName: string, voltage: number) {
     if (arduinoId) {
       const nodeId = `${arduinoId}.${pinName}`;
       // 2. Propagate
-      circuitGraph.propagateVoltage(nodeId, voltage);
+      const updatedNodes = circuitGraph.propagateVoltage(nodeId, voltage);
+      broadcastVoltageUpdates(updatedNodes);
 
       // 3. Update graph topology (components that modify switches/connections)
       for (const [id, comp] of circuitGraph.components.entries()) {
@@ -543,9 +555,11 @@ function initializeSimulation(hex: string, graphData: any) {
         if (comp && comp.type === 'ARDUINO_UNO') {
           if (node.pinType === 'power') {
             const v = nodeId.includes('3V3') ? 3.3 : 5.0;
-            circuitGraph.propagateVoltage(nodeId, v);
+            const updated = circuitGraph.propagateVoltage(nodeId, v);
+            broadcastVoltageUpdates(updated);
           } else if (node.pinType === 'ground') {
-            circuitGraph.propagateVoltage(nodeId, 0.0);
+            const updated = circuitGraph.propagateVoltage(nodeId, 0.0);
+            broadcastVoltageUpdates(updated);
           }
         }
       }

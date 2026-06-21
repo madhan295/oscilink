@@ -130,7 +130,7 @@ export const PushButton: React.FC<PushButtonProps> = ({ component }) => {
       onClick={handleClick}
       onTap={handleClick}
     >
-      <Rect x={-5} y={-5} width={50} height={50} fill="transparent" />
+      <Rect x={-5} y={-5} width={50} height={50} fill="transparent" listening={false} />
 
       {/* Leads */}
       <Group listening={false}>

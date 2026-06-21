@@ -176,11 +176,54 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
           const isSelected = state.selectedComponentIds.includes(draggedId);
           const idsToMove = isSelected ? state.selectedComponentIds : [draggedId];
 
+          let snapDx = 0;
+          let snapDy = 0;
+          let foundSnap = false;
+
+          // Check for snapping against breadboards
+          const breadboards = state.components.filter(c => c.type === 'BREADBOARD');
+          if (breadboards.length > 0) {
+            for (const id of idsToMove) {
+              if (foundSnap) break;
+              const comp = state.components.find(c => c.id === id);
+              if (!comp || comp.type === 'BREADBOARD') continue; // Don't snap breadboards to breadboards
+
+              for (const pin of Object.values(comp.pins)) {
+                if (foundSnap) break;
+                const currentAbs = getAbsolutePinPosition(comp, pin);
+                const absX = currentAbs.x + dx;
+                const absY = currentAbs.y + dy;
+
+                for (const bb of breadboards) {
+                  if (foundSnap) break;
+                  for (const bbPin of Object.values(bb.pins)) {
+                    const bbAbsPos = getAbsolutePinPosition(bb, bbPin);
+                    const sdx = bbAbsPos.x - absX;
+                    const sdy = bbAbsPos.y - absY;
+                    if (Math.abs(sdx) <= 8 && Math.abs(sdy) <= 8) {
+                      snapDx = sdx;
+                      snapDy = sdy;
+                      foundSnap = true;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          // Add a tiny random offset when snapping to force React-Konva to sync continuously
+          // This fixes a bug where Konva ignores the state update if the prop value doesn't change during drag
+          const epsilonX = foundSnap ? (Math.random() * 0.0001) - 0.00005 : 0;
+          const epsilonY = foundSnap ? (Math.random() * 0.0001) - 0.00005 : 0;
+          const finalDx = dx + snapDx + epsilonX;
+          const finalDy = dy + snapDy + epsilonY;
+
           idsToMove.forEach(id => {
             const comp = state.components.find(c => c.id === id);
             if (comp) {
-              comp.position.x += dx;
-              comp.position.y += dy;
+              comp.position.x += finalDx;
+              comp.position.y += finalDy;
 
               state.wires.forEach(wire => {
                 if (wire.from.componentId === id) {
@@ -474,7 +517,87 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
           toComponentId: w.to.componentId,
           toPinId: w.to.pinId
         }));
+
+        // Inject internal breadboard connections
+        state.components.forEach(comp => {
+          if (comp.type === 'BREADBOARD') {
+            // Power rails (horizontal)
+            const powerRails = ['TP', 'TN', 'BP', 'BN'];
+            powerRails.forEach(rail => {
+              for (let i = 0; i < 29; i++) {
+                mappedWires.push({
+                  id: `${comp.id}_internal_${rail}_${i}`,
+                  fromComponentId: comp.id,
+                  fromPinId: `${rail}_${i}`,
+                  toComponentId: comp.id,
+                  toPinId: `${rail}_${i + 1}`
+                });
+              }
+            });
+
+            // Terminal strips (vertical)
+            const topStripRows = ['A', 'B', 'C', 'D', 'E'];
+            for (let col = 0; col < 30; col++) {
+              for (let r = 0; r < 4; r++) {
+                mappedWires.push({
+                  id: `${comp.id}_internal_T_${col}_${r}`,
+                  fromComponentId: comp.id,
+                  fromPinId: `T_${col}_${topStripRows[r]}`,
+                  toComponentId: comp.id,
+                  toPinId: `T_${col}_${topStripRows[r + 1]}`
+                });
+              }
+            }
+
+            const bottomStripRows = ['F', 'G', 'H', 'I', 'J'];
+            for (let col = 0; col < 30; col++) {
+              for (let r = 0; r < 4; r++) {
+                mappedWires.push({
+                  id: `${comp.id}_internal_B_${col}_${r}`,
+                  fromComponentId: comp.id,
+                  fromPinId: `B_${col}_${bottomStripRows[r]}`,
+                  toComponentId: comp.id,
+                  toPinId: `B_${col}_${bottomStripRows[r + 1]}`
+                });
+              }
+            }
+          }
+        });
         
+        // Inject implicit spatial connections (plugging components into breadboards or each other)
+        const allPins: { compId: string; pinId: string; absPos: Point }[] = [];
+        state.components.forEach(comp => {
+          Object.values(comp.pins).forEach(pin => {
+            allPins.push({
+              compId: comp.id,
+              pinId: pin.id,
+              absPos: getAbsolutePinPosition(comp, pin)
+            });
+          });
+        });
+
+        for (let i = 0; i < allPins.length; i++) {
+          for (let j = i + 1; j < allPins.length; j++) {
+            const p1 = allPins[i];
+            const p2 = allPins[j];
+            if (p1.compId === p2.compId) continue; // Don't implicitly connect pins on the same component
+
+            const deltaX = Math.abs(p1.absPos.x - p2.absPos.x);
+            const deltaY = Math.abs(p1.absPos.y - p2.absPos.y);
+            
+            // If pins perfectly overlap (within 1px to allow floating point variance)
+            if (deltaX < 1.0 && deltaY < 1.0) {
+              mappedWires.push({
+                id: `implicit_${p1.compId}_${p1.pinId}_${p2.compId}_${p2.pinId}`,
+                fromComponentId: p1.compId,
+                fromPinId: p1.pinId,
+                toComponentId: p2.compId,
+                toPinId: p2.pinId
+              });
+            }
+          }
+        }
+
         graph.buildFromCircuitState(mappedComponents as any, mappedWires);
         return graph.serialize();
       },

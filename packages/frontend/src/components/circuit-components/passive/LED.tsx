@@ -153,7 +153,7 @@ export const LED: React.FC<LEDProps> = ({ component }) => {
       onClick={handleClick}
       onTap={handleClick}
     >
-      <Rect x={-5} y={-5} width={50} height={55} fill="transparent" />
+      <Rect x={-5} y={-5} width={50} height={55} fill="transparent" listening={false} />
       {/* Leads */}
       <Group listening={false}>
         <Path data="M 14 20 L 14 25 L 10 25 L 10 38" stroke="#C0C0C0" strokeWidth={2} lineJoin="round" />

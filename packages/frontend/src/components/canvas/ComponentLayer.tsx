@@ -17,6 +17,7 @@ import { LCD16x2 } from '../circuit-components/active/LCD16x2';
 import { UltrasonicSensor } from '../circuit-components/active/UltrasonicSensor';
 import { Relay } from '../circuit-components/active/Relay';
 import { TemperatureSensor } from '../circuit-components/active/TemperatureSensor';
+import { Breadboard } from '../circuit-components/passive/Breadboard';
 
 const FallbackComponent = ({ component }: { component: CircuitComponent }) => (
   <Group x={component.position.x} y={component.position.y} rotation={component.rotation}>
@@ -38,8 +39,8 @@ const ComponentRouter = ({ component }: { component: CircuitComponent }) => {
     case 'ULTRASONIC_SENSOR': return <UltrasonicSensor component={component} />;
     case 'RELAY': return <Relay component={component} />;
     case 'TEMPERATURE_SENSOR': return <TemperatureSensor component={component} />;
+    case 'BREADBOARD': return <Breadboard component={component} />;
     // Render fallback for un-implemented types
-    case 'BREADBOARD':
     default: return <FallbackComponent component={component} />;
   }
 };
@@ -79,6 +80,18 @@ export const ComponentLayer: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  const sortedComponents = React.useMemo(() => {
+    return [...components].sort((a, b) => {
+      // Breadboards at the very bottom
+      if (a.type === 'BREADBOARD' && b.type !== 'BREADBOARD') return -1;
+      if (a.type !== 'BREADBOARD' && b.type === 'BREADBOARD') return 1;
+      // Arduinos right above breadboards
+      if (a.type === 'ARDUINO_UNO' && b.type !== 'ARDUINO_UNO') return -1;
+      if (a.type !== 'ARDUINO_UNO' && b.type === 'ARDUINO_UNO') return 1;
+      return 0;
+    });
+  }, [components]);
+
   return (
     <Layer 
       ref={layerRef}
@@ -87,7 +100,7 @@ export const ComponentLayer: React.FC = () => {
       scaleX={viewport.scale} 
       scaleY={viewport.scale}
     >
-      {components.map(comp => (
+      {sortedComponents.map(comp => (
         <MemoizedComponent key={comp.id} component={comp} />
       ))}
     </Layer>
