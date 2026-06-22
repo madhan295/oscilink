@@ -35,6 +35,8 @@ interface WorkspaceState {
   historyIndex: number;
   focusTrigger: { ids: string[]; timestamp: number } | null;
   panMode: boolean;
+  currentProjectId: string | null;
+  currentProjectName: string;
 }
 
 interface WorkspaceActions {
@@ -61,34 +63,40 @@ interface WorkspaceActions {
   triggerFocus: (ids: string[]) => void;
   undo: () => void;
   redo: () => void;
-  loadProject: (components: CircuitComponent[], wires: Wire[], viewport: { scale: number; x: number; y: number }) => void;
+  loadProject: (components: CircuitComponent[], wires: Wire[], viewport: { scale: number; x: number; y: number }, projectId?: string | null, projectName?: string) => void;
   buildCircuitGraph: () => SerializedCircuitGraph;
   setPanMode: (mode: boolean) => void;
   validateCircuit: () => void;
   duplicateSelected: () => void;
   bringForward: () => void;
   sendBackward: () => void;
+  setCurrentProject: (id: string | null, name: string) => void;
+  resetWorkspace: () => void;
 }
 
 type WorkspaceStore = WorkspaceState & WorkspaceActions;
 
-
+const initialState = {
+  components: [],
+  wires: [],
+  selectedComponentIds: [],
+  selectedWireIds: [],
+  viewport: { scale: 1, x: 0, y: 0 },
+  isDrawingWire: false,
+  wireDrawingFrom: null,
+  mousePosition: { x: 0, y: 0 },
+  history: [{ components: [], wires: [] }],
+  historyIndex: 0,
+  focusTrigger: null,
+  panMode: false,
+  currentProjectId: null,
+  currentProjectName: 'Untitled Project'
+};
 
 export const useWorkspaceStore = create<WorkspaceStore>()(
   devtools(
     immer((set, get) => ({
-      components: [],
-      wires: [],
-      selectedComponentIds: [],
-      selectedWireIds: [],
-      viewport: { scale: 1, x: 0, y: 0 },
-      isDrawingWire: false,
-      wireDrawingFrom: null,
-      mousePosition: { x: 0, y: 0 },
-      history: [{ components: [], wires: [] }],
-      historyIndex: 0,
-      focusTrigger: null,
-      panMode: false,
+      ...initialState,
 
       pushHistory: () => {
         set((state) => {
@@ -180,13 +188,12 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
           let snapDy = 0;
           let foundSnap = false;
 
-          // Check for snapping against breadboards
           const breadboards = state.components.filter(c => c.type === 'BREADBOARD');
           if (breadboards.length > 0) {
             for (const id of idsToMove) {
               if (foundSnap) break;
               const comp = state.components.find(c => c.id === id);
-              if (!comp || comp.type === 'BREADBOARD') continue; // Don't snap breadboards to breadboards
+              if (!comp || comp.type === 'BREADBOARD') continue;
 
               for (const pin of Object.values(comp.pins)) {
                 if (foundSnap) break;
@@ -212,8 +219,6 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
             }
           }
 
-          // Add a tiny random offset when snapping to force React-Konva to sync continuously
-          // This fixes a bug where Konva ignores the state update if the prop value doesn't change during drag
           const epsilonX = foundSnap ? (Math.random() * 0.0001) - 0.00005 : 0;
           const epsilonY = foundSnap ? (Math.random() * 0.0001) - 0.00005 : 0;
           const finalDx = dx + snapDx + epsilonX;
@@ -485,14 +490,32 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
         }
       }),
 
-      loadProject: (components, wires, viewport) => set((state) => {
+      loadProject: (components, wires, viewport, projectId = null, projectName = 'Untitled Project') => set((state) => {
         state.components = components;
         state.wires = wires;
         state.viewport = viewport;
-        state.history = [];
-        state.historyIndex = -1;
+        state.history = [{ components: JSON.parse(JSON.stringify(components)), wires: JSON.parse(JSON.stringify(wires)) }];
+        state.historyIndex = 0;
         state.selectedComponentIds = [];
         state.selectedWireIds = [];
+        state.currentProjectId = projectId;
+        state.currentProjectName = projectName;
+      }),
+
+      setCurrentProject: (id, name) => set((state) => {
+        state.currentProjectId = id;
+        state.currentProjectName = name;
+      }),
+
+      resetWorkspace: () => set((state) => {
+        const viewport = state.viewport;
+        Object.assign(state, {
+          ...initialState,
+          viewport: viewport,
+          history: [{ components: [], wires: [] }],
+          currentProjectId: null,
+          currentProjectName: 'Untitled Project'
+        });
       }),
 
       buildCircuitGraph: () => {

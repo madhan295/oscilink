@@ -6,7 +6,7 @@ import { Button } from './Button';
 
 export function UserMenu() {
   const { user, isAuthenticated, signOut } = useAuthStore();
-  const { setAuthModalOpen } = useUiStore();
+  const { setAuthModalOpen, setMyProjectsOpen } = useUiStore();
   const [isOpen, setIsOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -67,7 +67,10 @@ export function UserMenu() {
           <div className="py-1">
             <button 
               className="w-full text-left px-4 py-2 text-sm text-text-secondary hover:text-text hover:bg-surface-hover transition-colors flex items-center gap-2"
-              onClick={() => { setIsOpen(false); /* handle my projects */ }}
+              onClick={() => { 
+                setIsOpen(false);
+                setMyProjectsOpen(true);
+              }}
             >
               <FolderOpen size={14} />
               My Projects

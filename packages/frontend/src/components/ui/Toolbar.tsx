@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PanelLeft, PanelRight, Play, Loader2, Square, RotateCcw, Cpu, ChevronDown, FileCode2, FolderOpen, Save, AlertTriangle, AlertCircle } from 'lucide-react';
+import { PanelLeft, PanelRight, Play, Loader2, Square, RotateCcw, Cpu, ChevronDown, FileCode2, FolderOpen, Save, AlertTriangle, AlertCircle, Check } from 'lucide-react';
 import { UndoRedoButtons } from './UndoRedoButtons';
 import { useCompiler } from '../../hooks/useCompiler';
 import { useSimulation } from '../../hooks/useSimulation';
@@ -8,6 +8,7 @@ import { Tooltip } from './Tooltip';
 import { useEditorStore } from '../../store/editorStore';
 import { useSimulationStore } from '../../store/simulationStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
+import { useUiStore } from '../../store/uiStore';
 import { CodeEditorRef } from '../editor/CodeEditor';
 import toast from 'react-hot-toast';
 import { Button } from './Button';
@@ -24,9 +25,16 @@ interface ToolbarProps {
   editorRef: React.RefObject<CodeEditorRef>;
 }
 
+const CheckIcon = ({ status, hasErrors }: { status: string, hasErrors: boolean }) => {
+  if (hasErrors) return <AlertTriangle size={14} className="text-error" />;
+  if (status === 'COMPILED') return <Check size={14} className="text-accent-green" />;
+  return <Cpu size={14} />;
+};
+
 export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorPanelOpen, setErrorPanelOpen, editorRef }: ToolbarProps) {
   const { compile } = useCompiler();
   const simulation = useSimulation();
+  const { setSaveOptionsModalOpen } = useUiStore();
   const isCompiling = useEditorStore(state => state.isCompiling);
   const compilationErrors = useEditorStore(state => state.compilationErrors);
   const staticErrors = useEditorStore(state => state.staticErrors);
@@ -105,7 +113,7 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
             </Button>
           </Tooltip>
           <Tooltip position="bottom" content="Save Project" shortcut="Ctrl+S">
-            <Button variant="ghost" size="sm" className="px-2" onClick={() => toast('Save project feature coming soon')}>
+            <Button variant="ghost" size="sm" className="px-2" onClick={() => setSaveOptionsModalOpen(true)}>
               <Save size={16} />
             </Button>
           </Tooltip>
@@ -234,11 +242,4 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
       </div>
     </header>
   );
-}
-
-function CheckIcon({ status, hasErrors }: { status: string, hasErrors: boolean }) {
-  if (status === 'COMPILED' && !hasErrors) {
-    return <Play size={16} />;
-  }
-  return <Play size={16} fill="currentColor" />;
 }

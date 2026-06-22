@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useWorkspaceStore } from '../store/workspaceStore';
+import { useUiStore } from '../store/uiStore';
 import { createComponent } from '../utils/componentFactory';
 export const isEditingText = (_e: KeyboardEvent | MouseEvent) => {
   const active = document.activeElement as HTMLElement;
@@ -94,10 +95,14 @@ export const useKeyboardShortcuts = () => {
         return;
       }
 
-      // Ctrl+S (Save)
+      // Ctrl+S (Save Options) or Ctrl+Shift+S (Save to Cloud directly)
       if (e.ctrlKey && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        document.dispatchEvent(new CustomEvent('open-save-modal'));
+        if (e.shiftKey) {
+          useUiStore.getState().setSaveProjectModalOpen(true);
+        } else {
+          useUiStore.getState().setSaveOptionsModalOpen(true);
+        }
         return;
       }
 

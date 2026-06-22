@@ -14,6 +14,9 @@ import { WelcomeModal } from './components/ui/WelcomeModal';
 import { GuidedTour } from './components/ui/GuidedTour';
 import { SensorValuesControl } from './components/ui/SensorValuesControl';
 import { AuthModal } from './components/ui/AuthModal';
+import { MyProjectsPanel } from './components/ui/MyProjectsPanel';
+import { SaveProjectModal } from './components/ui/SaveProjectModal';
+import { SaveOptionsModal } from './components/ui/SaveOptionsModal';
 import { useAuthStore } from './store/authStore';
 import { useUiStore } from './store/uiStore';
 
@@ -73,6 +76,9 @@ function App() {
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
       {/* Tooltips and Toasts */}
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setAuthModalOpen(false)} />
+      <MyProjectsPanel />
+      <SaveOptionsModal />
+      <SaveProjectModal />
       <WelcomeModal />
       <GuidedTour />
       <Toaster position="bottom-right" toastOptions={{ style: { background: '#333', color: '#fff' } }} />
