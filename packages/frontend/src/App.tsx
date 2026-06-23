@@ -93,7 +93,7 @@ function App() {
       <div className="flex-1 overflow-hidden relative">
         {/* Canvas permanently sits underneath, filling the WHOLE area */}
         <main className="absolute inset-0 bg-[#FFFAFA] flex flex-col z-0">
-          <Canvas rightPanelOpen={rightOpen} />
+          <Canvas />
           <WireColorPicker />
         </main>
 

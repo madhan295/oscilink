@@ -9,6 +9,7 @@ import { useEditorStore, DEFAULT_CODE } from '../../store/editorStore';
 import { useSimulationStore } from '../../store/simulationStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useUiStore } from '../../store/uiStore';
+import { deserializeProject, loadProjectFromFile } from '../../utils/projectSerializer';
 import { CodeEditorRef } from '../editor/CodeEditor';
 import toast from 'react-hot-toast';
 import { Button } from './Button';
@@ -48,6 +49,7 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
 
   const [compileDropdownOpen, setCompileDropdownOpen] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<'new' | 'open'>('new');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -67,6 +69,7 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
   const hasDiagnostics = totalErrors > 0 || totalWarnings > 0 || circuitErrors.length > 0;
 
   const handleNewProject = () => {
+    setConfirmAction('new');
     setShowConfirmModal(true);
   };
 
@@ -74,6 +77,25 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
     resetWorkspace();
     setCode(DEFAULT_CODE);
     setShowConfirmModal(false);
+  };
+
+  const executeOpenProject = async () => {
+    try {
+      const data = await loadProjectFromFile();
+      deserializeProject(data);
+      setShowConfirmModal(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to open project');
+    }
+  };
+
+  const handleOpenProject = () => {
+    if (useWorkspaceStore.getState().components.length > 0) {
+      setConfirmAction('open');
+      setShowConfirmModal(true);
+    } else {
+      executeOpenProject();
+    }
   };
 
   const handleRun = () => {
@@ -122,7 +144,7 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
             </Button>
           </Tooltip>
           <Tooltip position="bottom" content="Open Project" shortcut="Ctrl+O">
-            <Button variant="ghost" size="sm" className="px-2" onClick={() => toast('Open project feature coming soon')}>
+            <Button variant="ghost" size="sm" className="px-2" onClick={handleOpenProject}>
               <FolderOpen size={16} />
             </Button>
           </Tooltip>
@@ -258,9 +280,13 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
       {showConfirmModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-elevated border border-border-default rounded-xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
-            <h2 className="text-lg font-semibold text-text-primary">Create New Project</h2>
+            <h2 className="text-lg font-semibold text-text-primary">
+              {confirmAction === 'new' ? 'Create New Project' : 'Open Project'}
+            </h2>
             <p className="text-sm text-text-secondary leading-relaxed">
-              Are you sure you want to start a new project? Any unsaved changes will be lost.
+              {confirmAction === 'new' 
+                ? 'Are you sure you want to start a new project? Any unsaved changes will be lost.' 
+                : 'Opening a project will discard your current work. Continue?'}
             </p>
             <div className="flex justify-end gap-3 mt-2">
               <Button 
@@ -271,9 +297,9 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
               </Button>
               <Button 
                 variant="danger" 
-                onClick={executeNewProject}
+                onClick={confirmAction === 'new' ? executeNewProject : executeOpenProject}
               >
-                Start Fresh
+                {confirmAction === 'new' ? 'Start Fresh' : 'Continue'}
               </Button>
             </div>
           </div>

@@ -23,7 +23,7 @@ export const CanvasContext = createContext<{
   handlePinMouseLeave: () => {},
 });
 
-export const Canvas: React.FC<{ rightPanelOpen?: boolean }> = ({ rightPanelOpen = false }) => {
+export const Canvas: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   
