@@ -80,10 +80,10 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
   };
 
   const executeOpenProject = async () => {
+    setShowConfirmModal(false);
     try {
       const data = await loadProjectFromFile();
       deserializeProject(data);
-      setShowConfirmModal(false);
     } catch (err: any) {
       toast.error(err.message || 'Failed to open project');
     }

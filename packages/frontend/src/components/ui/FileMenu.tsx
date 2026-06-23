@@ -86,8 +86,8 @@ export const FileMenu: React.FC = () => {
         title: "Open Project",
         message: "Opening a project will discard your current work. Continue?",
         onConfirm: () => {
-          executeOpenProject();
           setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+          executeOpenProject();
         }
       });
       return;
