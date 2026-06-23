@@ -26,6 +26,8 @@ export function RightPanel({ editorRef }: RightPanelProps) {
   useEffect(() => {
     if (selectedComponentIds.length > 0) {
       setActiveTab('properties');
+    } else if (activeTab === 'properties') {
+      setActiveTab('code');
     }
   }, [selectedComponentIds]);
   
