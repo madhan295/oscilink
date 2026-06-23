@@ -10,7 +10,6 @@ import { ComponentLayer } from './ComponentLayer';
 import { InteractionLayer } from './InteractionLayer';
 import { ErrorHighlightLayer } from './ErrorHighlightLayer';
 import { PinRef } from '../../types/components';
-import { PropertiesPanel } from '../ui/PropertiesPanel';
 
 export const CanvasContext = createContext<{ 
   stopPropagation: (e: any) => void;
@@ -328,13 +327,10 @@ export const Canvas: React.FC<{ rightPanelOpen?: boolean }> = ({ rightPanelOpen 
         </Stage>
       )}
 
-      {/* Floating Properties Panel */}
-      <PropertiesPanel rightPanelOpen={rightPanelOpen} />
-
       {/* Zoom Indicator UI Overlay */}
       <div 
         className="absolute bottom-4 flex items-center bg-surface border border-border rounded-full shadow-lg overflow-hidden text-text select-none z-10 h-10 transition-all duration-300 ease-in-out"
-        style={{ right: rightPanelOpen ? '466px' : '16px' }}
+        style={{ right: '16px' }}
       >
         <button 
           onClick={undo}

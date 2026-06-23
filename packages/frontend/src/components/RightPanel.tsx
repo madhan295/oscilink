@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { Terminal, AlertCircle, Code } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Terminal, AlertCircle, Code, Settings2 } from 'lucide-react';
 import { SerialMonitor } from './editor/SerialMonitor';
 import { ProblemsPanel } from './ui/ProblemsPanel';
+import { PropertiesPanel } from './ui/PropertiesPanel';
 import { CodeEditor, CodeEditorRef } from './editor/CodeEditor';
 import { useEditorStore } from '../store/editorStore';
 import { useSimulationStore } from '../store/simulationStore';
+import { useWorkspaceStore } from '../store/workspaceStore';
 
-type Tab = 'code' | 'problems' | 'serial';
+type Tab = 'code' | 'problems' | 'serial' | 'properties';
 
 interface RightPanelProps {
   editorRef: React.RefObject<CodeEditorRef>;
@@ -19,6 +21,13 @@ export function RightPanel({ editorRef }: RightPanelProps) {
   const staticErrors = useEditorStore(state => state.staticErrors);
   const circuitErrors = useSimulationStore(state => state.circuitErrors);
   const runtimeWarnings = useSimulationStore(state => state.runtimeWarnings);
+  const selectedComponentIds = useWorkspaceStore(state => state.selectedComponentIds);
+  
+  useEffect(() => {
+    if (selectedComponentIds.length > 0) {
+      setActiveTab('properties');
+    }
+  }, [selectedComponentIds]);
   
   const errorCount = compilationErrors.length + staticErrors.filter(e => e.severity === 'error').length + circuitErrors.filter(e => e.severity === 'error').length;
   const warningCount = staticErrors.filter(e => e.severity === 'warning').length + circuitErrors.filter(e => e.severity === 'warning').length + runtimeWarnings.length;
@@ -74,6 +83,17 @@ export function RightPanel({ editorRef }: RightPanelProps) {
           <Terminal size={15} />
           Serial
         </button>
+        <button
+          onClick={() => setActiveTab('properties')}
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+            activeTab === 'properties'
+              ? 'border-primary text-primary bg-[#1A1B26]'
+              : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-white/5'
+          }`}
+        >
+          <Settings2 size={15} />
+          Properties
+        </button>
       </div>
 
       {/* Tab Content */}
@@ -92,6 +112,11 @@ export function RightPanel({ editorRef }: RightPanelProps) {
         {/* Keep SerialMonitor rendered but hidden to not lose its state */}
         <div className={`absolute inset-0 ${activeTab === 'serial' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
           <SerialMonitor />
+        </div>
+
+        {/* Properties Panel Tab */}
+        <div className={`absolute inset-0 overflow-hidden ${activeTab === 'properties' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
+          <PropertiesPanel />
         </div>
       </div>
     </aside>

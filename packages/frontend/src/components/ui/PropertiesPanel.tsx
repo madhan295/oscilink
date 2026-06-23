@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
-export const PropertiesPanel: React.FC<{ rightPanelOpen?: boolean }> = ({ rightPanelOpen }) => {
+export const PropertiesPanel: React.FC = () => {
   const selectedComponentIds = useWorkspaceStore(state => state.selectedComponentIds);
   const components = useWorkspaceStore(state => state.components);
   const wires = useWorkspaceStore(state => state.wires);
@@ -25,19 +25,10 @@ export const PropertiesPanel: React.FC<{ rightPanelOpen?: boolean }> = ({ rightP
   const componentStates = useSimulationStore(state => state.componentStates);
   const pinVoltages = useSimulationStore(state => state.pinVoltages);
 
-  const isOpen = selectedComponentIds.length > 0;
-  const rightPosition = isOpen 
-    ? (rightPanelOpen ? '466px' : '16px') 
-    : '-350px';
-
   return (
     <div 
       id="properties-panel"
-      className={clsx(
-        "absolute top-4 z-50 bg-surface border border-border rounded-lg shadow-2xl w-80 transition-all duration-300 ease-in-out flex flex-col overflow-hidden pointer-events-auto",
-        selectedComponentIds.length === 1 ? "h-[calc(100vh-8rem)]" : "h-auto"
-      )}
-      style={{ right: rightPosition }}
+      className="flex flex-col h-full w-full bg-surface"
     >
       {selectedComponentIds.length > 1 ? (
         <MultipleSelectionContent count={selectedComponentIds.length} deleteSelected={deleteSelected} duplicateSelected={duplicateSelected} />
@@ -58,7 +49,11 @@ export const PropertiesPanel: React.FC<{ rightPanelOpen?: boolean }> = ({ rightP
           sendBackward={sendBackward}
           selectWire={selectWire}
         />
-      ) : null}
+      ) : (
+        <div className="flex items-center justify-center h-full text-text-secondary text-sm">
+          Select a component to view properties
+        </div>
+      )}
     </div>
   );
 };
