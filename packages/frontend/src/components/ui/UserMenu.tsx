@@ -42,7 +42,7 @@ export function UserMenu() {
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-8 h-8 rounded-full border border-border-subtle bg-gradient-to-br from-accent-blue to-purple-600 text-white font-semibold text-xs shadow-sm hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-accent-blue focus:ring-offset-1 focus:ring-offset-surface"
+        className="flex items-center justify-center w-10 h-10 rounded-full bg-[#F49F85] text-white font-bold text-lg shadow-sm hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-[#F49F85] focus:ring-offset-1 focus:ring-offset-white"
       >
         {avatarUrl && !imgError ? (
           <img 

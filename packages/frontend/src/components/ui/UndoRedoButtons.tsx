@@ -35,7 +35,7 @@ export const UndoRedoButtons: React.FC = () => {
   const canRedo = historyIndex < history.length - 1;
 
   return (
-    <div className="flex items-center gap-1 bg-surface border border-border rounded-md p-1 shadow-sm">
+    <div className="flex items-center gap-1">
       <button
         onClick={undo}
         disabled={!canUndo}
