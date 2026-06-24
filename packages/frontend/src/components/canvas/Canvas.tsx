@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback, createContext } from '
 import { Stage, Layer } from 'react-konva';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { Grid } from './Grid';
-import { Plus, Minus, Maximize, RotateCw, Undo2, Redo2 } from 'lucide-react';
+import { Maximize, Undo2, Redo2, ZoomIn, ZoomOut } from 'lucide-react';
 import Konva from 'konva';
 import { useWireDrawing } from '../../hooks/useWireDrawing';
 import { WireLayer } from './WireLayer';
@@ -36,8 +36,7 @@ export const Canvas: React.FC<{ rightPanelOpen?: boolean }> = ({ rightPanelOpen 
   const setViewport = useWorkspaceStore((state) => state.setViewport);
   const clearSelection = useWorkspaceStore((state) => state.clearSelection);
   const components = useWorkspaceStore((state) => state.components);
-  const selectedComponentIds = useWorkspaceStore((state) => state.selectedComponentIds);
-  const updateComponentRotation = useWorkspaceStore((state) => state.updateComponentRotation);
+
   const undo = useWorkspaceStore((state) => state.undo);
   const redo = useWorkspaceStore((state) => state.redo);
   const history = useWorkspaceStore((state) => state.history);
@@ -267,27 +266,16 @@ export const Canvas: React.FC<{ rightPanelOpen?: boolean }> = ({ rightPanelOpen 
     setViewport({ scale: newScale, x: newX, y: newY });
   };
 
-  const handleRotate = () => {
-    selectedComponentIds.forEach(id => {
-      const comp = components.find(c => c.id === id);
-      if (comp) {
-        updateComponentRotation(id, (comp.rotation + 90) % 360);
-      }
-    });
-  };
-
-  const cursorStyle = isPanning ? 'grabbing' : (isSpacePressed ? 'grab' : 'default');
   const zoomPercent = Math.round(viewport.scale * 100);
-  
+
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
-  const hasSelection = selectedComponentIds.length > 0;
 
   return (
     <div 
       ref={containerRef} 
       className="w-full h-full relative overflow-hidden"
-      style={{ cursor: cursorStyle }}
+      style={{ cursor: isPanning ? 'grabbing' : (isSpacePressed ? 'grab' : 'default') }}
     >
       {dimensions.width > 0 && dimensions.height > 0 && (
         <Stage
@@ -329,60 +317,60 @@ export const Canvas: React.FC<{ rightPanelOpen?: boolean }> = ({ rightPanelOpen 
 
       {/* Zoom Indicator UI Overlay */}
       <div 
-        className="absolute bottom-4 flex items-center bg-surface border border-border rounded-full shadow-lg overflow-hidden text-text select-none z-10 h-10 transition-all duration-300 ease-in-out"
-        style={{ right: rightPanelOpen ? '466px' : '16px' }}
+        className="absolute bottom-5 flex items-center bg-white border border-[#E5EBE8] rounded-full shadow-sm text-[#2C5E4A] select-none z-10 px-2 py-1.5 gap-1.5 transition-all duration-300 ease-in-out"
+        style={{ right: rightPanelOpen ? '466px' : '20px' }}
       >
         <button 
           onClick={undo}
           disabled={!canUndo}
-          className={`px-3 hover:bg-surface-hover h-full transition-colors flex items-center justify-center border-r border-border ${!canUndo ? 'opacity-40 cursor-not-allowed' : ''}`}
+          className={`p-1.5 hover:bg-[#F3F4F3] rounded-full transition-colors flex items-center justify-center ${!canUndo ? 'opacity-40 cursor-not-allowed' : ''}`}
           title="Undo (Ctrl+Z)"
         >
-          <Undo2 size={16} />
+          <Undo2 size={18} strokeWidth={2.5} />
         </button>
         <button 
           onClick={redo}
           disabled={!canRedo}
-          className={`px-3 hover:bg-surface-hover h-full transition-colors flex items-center justify-center border-r border-border ${!canRedo ? 'opacity-40 cursor-not-allowed' : ''}`}
+          className={`p-1.5 hover:bg-[#F3F4F3] rounded-full transition-colors flex items-center justify-center ${!canRedo ? 'opacity-40 cursor-not-allowed' : ''}`}
           title="Redo (Ctrl+Y)"
         >
-          <Redo2 size={16} />
+          <Redo2 size={18} strokeWidth={2.5} />
         </button>
+
+        <div className="w-px h-5 bg-[#E5EBE8] mx-1" />
+
         <button 
-          onClick={handleRotate}
-          disabled={!hasSelection}
-          className={`px-3 hover:bg-surface-hover h-full transition-colors flex items-center justify-center border-r border-border ${!hasSelection ? 'opacity-40 cursor-not-allowed' : ''}`}
-          title="Rotate (R)"
+          onClick={handleZoomIn}
+          className="p-1.5 hover:bg-[#F3F4F3] rounded-full transition-colors flex items-center justify-center"
+          title="Zoom In"
         >
-          <RotateCw size={16} />
+          <ZoomIn size={18} strokeWidth={2.5} />
         </button>
-        <button 
-          onClick={handleFit}
-          className="px-3 hover:bg-surface-hover h-full transition-colors flex items-center justify-center border-r border-border"
-          title="Fit to Screen (F)"
-        >
-          <Maximize size={16} />
-        </button>
-        <button 
-          onClick={handleZoomOut}
-          className="px-3 hover:bg-surface-hover h-full transition-colors flex items-center justify-center"
-          title="Zoom Out"
-        >
-          <Minus size={16} />
-        </button>
+
         <button 
           onClick={handleResetZoom}
-          className="px-3 py-2 text-xs font-medium hover:bg-surface-hover transition-colors border-x border-border"
+          className="px-3 py-1 text-[13px] font-bold bg-[#F3F4F3] hover:bg-[#E5EBE8] rounded-full transition-colors mx-1 text-[#2C5E4A]"
           title="Reset Zoom"
         >
           {zoomPercent}%
         </button>
+
         <button 
-          onClick={handleZoomIn}
-          className="px-3 hover:bg-surface-hover h-full transition-colors flex items-center justify-center"
-          title="Zoom In"
+          onClick={handleZoomOut}
+          className="p-1.5 hover:bg-[#F3F4F3] rounded-full transition-colors flex items-center justify-center"
+          title="Zoom Out"
         >
-          <Plus size={16} />
+          <ZoomOut size={18} strokeWidth={2.5} />
+        </button>
+
+        <div className="w-px h-5 bg-[#E5EBE8] mx-1" />
+
+        <button 
+          onClick={handleFit}
+          className="w-[34px] h-[34px] bg-[#3C6A56] hover:bg-[#2F5343] text-white rounded-full transition-colors flex items-center justify-center shadow-sm ml-0.5"
+          title="Fit to Screen (F)"
+        >
+          <Maximize size={16} strokeWidth={2.5} />
         </button>
       </div>
     </div>

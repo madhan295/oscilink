@@ -1,7 +1,7 @@
 import { useRef, useState, useImperativeHandle, forwardRef, useCallback, useEffect } from 'react';
 import Editor, { Monaco } from '@monaco-editor/react';
 import { useEditorStore } from '../../store/editorStore';
-import { Wand2, Search, Type, Plus, Minus } from 'lucide-react';
+import { Type, Plus, Minus, Copy } from 'lucide-react';
 import type { editor } from 'monaco-editor';
 import { analyzeCode } from '../../utils/codeAnalyzer';
 
@@ -320,62 +320,47 @@ export const CodeEditor = forwardRef<CodeEditorRef>((_props, ref) => {
     }
   }));
 
-  const handleFormat = () => {
-    if (editorRef.current) {
-      editorRef.current.getAction('editor.action.formatDocument')?.run();
-    }
-  };
-
-  const handleFind = () => {
-    if (editorRef.current) {
-      editorRef.current.getAction('actions.find')?.run();
-    }
-  };
-
   const increaseFontSize = () => setFontSize(prev => Math.min(prev + 1, 32));
   const decreaseFontSize = () => setFontSize(prev => Math.max(prev - 1, 8));
 
   return (
-    <div className="flex flex-col h-full w-full bg-[#1e1e1e]">
-      {/* Editor Toolbar */}
-      <div className="flex items-center justify-between px-3 h-[36px] min-h-[36px] border-b border-[#333] bg-[#252526] select-none">
+    <div className="flex flex-col h-full w-full bg-transparent">
+      {/* Editor Header */}
+      <div className="flex items-center justify-between px-5 pt-5 pb-3 select-none border-b border-[#E5EBE8] mb-2">
         <div className="flex items-center">
-          <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
-            Arduino C++
+          <span className="px-2 py-1 rounded text-[10px] font-bold bg-[#C2E0C6] text-[#2C5E4A] tracking-wider uppercase">
+            C++
           </span>
         </div>
-        <div className="flex items-center gap-1 text-text-secondary">
-          <button 
-            onClick={handleFormat}
-            className="p-1.5 rounded hover:bg-[#333] hover:text-text transition-colors"
-            title="Format Code"
-          >
-            <Wand2 size={15} />
-          </button>
-          <button 
-            onClick={handleFind}
-            className="p-1.5 rounded hover:bg-[#333] hover:text-text transition-colors"
-            title="Find/Replace (Ctrl+F)"
-          >
-            <Search size={15} />
-          </button>
-          <div className="w-px h-4 bg-[#444] mx-1" />
-          <div className="flex items-center bg-[#1e1e1e] rounded border border-[#333] overflow-hidden">
+        <div className="flex items-center gap-4 text-[#6A7B76]">
+          <div className="flex items-center gap-1.5 border border-[#E5EBE8] rounded-md px-1 py-0.5 bg-white">
             <button 
               onClick={decreaseFontSize}
-              className="px-2 py-1 hover:bg-[#333] hover:text-text transition-colors border-r border-[#333]"
+              className="hover:text-[#2C5E4A] transition-colors p-0.5"
               title="Decrease Font Size"
             >
               <div className="flex items-center"><Type size={12} /><Minus size={10} className="ml-0.5" /></div>
             </button>
+            <div className="w-px h-3 bg-[#E5EBE8]" />
             <button 
               onClick={increaseFontSize}
-              className="px-2 py-1 hover:bg-[#333] hover:text-text transition-colors"
+              className="hover:text-[#2C5E4A] transition-colors p-0.5"
               title="Increase Font Size"
             >
               <div className="flex items-center"><Type size={13} /><Plus size={10} className="ml-0.5" /></div>
             </button>
           </div>
+          
+          <button 
+            onClick={() => {
+              navigator.clipboard.writeText(code);
+              useEditorStore.getState().compilationErrors.length; // Just to avoid unused var
+            }}
+            className="hover:text-[#2C5E4A] transition-colors"
+            title="Copy Code"
+          >
+            <Copy size={14} strokeWidth={2.5} />
+          </button>
         </div>
       </div>
 
@@ -384,7 +369,7 @@ export const CodeEditor = forwardRef<CodeEditorRef>((_props, ref) => {
         <Editor
           height="100%"
           language="cpp"
-          theme="vs-dark"
+          theme="vs"
           value={code}
           onChange={handleEditorChange}
           onMount={handleEditorDidMount}

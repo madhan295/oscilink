@@ -13,6 +13,7 @@ import { CodeEditorRef } from '../editor/CodeEditor';
 import toast from 'react-hot-toast';
 import { Button } from './Button';
 import { UserMenu } from './UserMenu';
+import { HelpMenu } from './HelpMenu';
 import { clsx } from 'clsx';
 
 interface ToolbarProps {
@@ -199,9 +200,9 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
               </Button>
             </Tooltip>
             
-            <button className="p-2 hover:bg-black/5 rounded transition-colors ml-1">
-              <SettingsIcon size={20} />
-            </button>
+            <div className="ml-1 flex items-center justify-center">
+              <HelpMenu />
+            </div>
           </div>
           
           <div className="ml-3">

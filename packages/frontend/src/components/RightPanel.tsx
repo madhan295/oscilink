@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Terminal, AlertCircle, Code, Settings2 } from 'lucide-react';
+import { Terminal, AlertCircle, Code, Settings2, HelpCircle } from 'lucide-react';
 import { SerialMonitor } from './editor/SerialMonitor';
 import { ProblemsPanel } from './ui/ProblemsPanel';
 import { PropertiesPanel } from './ui/PropertiesPanel';
@@ -36,37 +36,37 @@ export function RightPanel({ editorRef }: RightPanelProps) {
 
   const totalDiagnostics = errorCount + warningCount;
   
-  let badgeColor = 'bg-gray-500/20 text-gray-400';
+  let badgeColor = 'bg-black/5 text-[#6A7B76]';
   if (errorCount > 0) {
-    badgeColor = 'bg-red-500/20 text-red-400';
+    badgeColor = 'bg-[#FCEAEB] text-[#FF8A8A]';
   } else if (warningCount > 0) {
-    badgeColor = 'bg-orange-500/20 text-orange-400';
+    badgeColor = 'bg-[#FFF2E5] text-[#FFA048]';
   }
 
   return (
-    <aside className="w-full h-full bg-surface border-l border-border flex flex-col">
+    <aside className="w-full h-full bg-white flex flex-col rounded-2xl overflow-hidden border border-black/5">
       {/* Tabs Header */}
-      <div className="flex items-center border-b border-border bg-[#1E1E1E]">
+      <div className="flex items-center border-b border-[#E5EBE8] bg-white px-2 pt-2">
         <button
           onClick={() => setActiveTab('code')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+          className={`flex items-center gap-2 px-4 py-2.5 text-[13px] font-bold transition-colors border-b-2 ${
             activeTab === 'code'
-              ? 'border-primary text-primary bg-[#1A1B26]'
-              : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-white/5'
+              ? 'border-[#2C5E4A] text-[#2C5E4A]'
+              : 'border-transparent text-[#6A7B76] hover:text-[#2C5E4A] hover:bg-black/5'
           }`}
         >
-          <Code size={15} />
+          <Code size={16} />
           Code
         </button>
         <button
           onClick={() => setActiveTab('problems')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+          className={`flex items-center gap-2 px-4 py-2.5 text-[13px] font-bold transition-colors border-b-2 ${
             activeTab === 'problems'
-              ? 'border-primary text-primary bg-[#1A1B26]'
-              : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-white/5'
+              ? 'border-[#2C5E4A] text-[#2C5E4A]'
+              : 'border-transparent text-[#6A7B76] hover:text-[#2C5E4A] hover:bg-black/5'
           }`}
         >
-          <AlertCircle size={15} />
+          <AlertCircle size={16} />
           Problems
           {totalDiagnostics > 0 && (
             <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold ${badgeColor}`}>
@@ -76,30 +76,30 @@ export function RightPanel({ editorRef }: RightPanelProps) {
         </button>
         <button
           onClick={() => setActiveTab('serial')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+          className={`flex items-center gap-2 px-4 py-2.5 text-[13px] font-bold transition-colors border-b-2 ${
             activeTab === 'serial'
-              ? 'border-primary text-primary bg-[#1A1B26]'
-              : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-white/5'
+              ? 'border-[#2C5E4A] text-[#2C5E4A]'
+              : 'border-transparent text-[#6A7B76] hover:text-[#2C5E4A] hover:bg-black/5'
           }`}
         >
-          <Terminal size={15} />
+          <Terminal size={16} />
           Serial
         </button>
         <button
           onClick={() => setActiveTab('properties')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+          className={`flex items-center gap-2 px-4 py-2.5 text-[13px] font-bold transition-colors border-b-2 ${
             activeTab === 'properties'
-              ? 'border-primary text-primary bg-[#1A1B26]'
-              : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-white/5'
+              ? 'border-[#2C5E4A] text-[#2C5E4A]'
+              : 'border-transparent text-[#6A7B76] hover:text-[#2C5E4A] hover:bg-black/5'
           }`}
         >
-          <Settings2 size={15} />
+          <Settings2 size={16} />
           Properties
         </button>
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-hidden relative bg-[#1A1B26]">
+      <div className="flex-1 overflow-hidden relative bg-white">
         {/* Render Code Editor but hide it when inactive to preserve state */}
         <div id="tour-code-editor" className={`absolute inset-0 flex flex-col ${activeTab === 'code' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
           <CodeEditor ref={editorRef} />

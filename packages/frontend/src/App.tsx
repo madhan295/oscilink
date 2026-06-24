@@ -105,8 +105,8 @@ function App() {
         </div>
 
         {/* Right Panel (Code Editor + Properties/Inspector) */}
-        <div className={`absolute top-0 bottom-0 right-0 z-10 overflow-hidden transition-all duration-300 ease-in-out ${rightOpen ? 'w-[450px]' : 'w-0'}`}>
-          <div className="w-[450px] h-full absolute top-0 left-0 shadow-[-4px_0_24px_rgba(0,0,0,0.06)]">
+        <div className={`absolute top-[80px] bottom-4 right-4 z-10 overflow-hidden transition-all duration-300 ease-in-out ${rightOpen ? 'w-[450px]' : 'w-0'}`}>
+          <div className="w-[450px] h-full absolute top-0 left-0 shadow-[0_4px_24px_rgba(0,0,0,0.06)] rounded-2xl bg-transparent">
             <RightPanel editorRef={editorRef} />
           </div>
         </div>

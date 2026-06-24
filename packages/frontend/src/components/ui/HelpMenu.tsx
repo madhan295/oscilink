@@ -44,47 +44,47 @@ export function HelpMenu() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`px-2 ${isOpen ? 'bg-surface-hover text-primary' : ''}`}
+            className={`px-2 text-[#2C5E4A] hover:bg-[#2C5E4A]/10 ${isOpen ? 'bg-[#2C5E4A]/15 text-[#2C5E4A]' : ''}`}
             onClick={() => setIsOpen(!isOpen)}
           >
-            <HelpCircle size={16} />
+            <HelpCircle size={18} />
           </Button>
         </Tooltip>
 
         {isOpen && (
-          <div className="absolute top-full right-0 mt-1 w-56 bg-elevated border border-border-default rounded-md shadow-lg z-50 py-1">
+          <div className="absolute top-full right-0 mt-1 w-56 bg-white border border-[#E5EBE8] rounded-md shadow-lg z-50 py-1">
             <button
               onClick={handleStartTour}
-              className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-surface-hover flex items-center gap-3 transition-colors"
+              className="w-full text-left px-4 py-2 text-sm text-[#2C5E4A] font-medium hover:bg-[#F3F4F3] flex items-center gap-3 transition-colors"
             >
-              <Play size={14} className="text-primary" />
+              <Play size={14} className="text-[#82b49b]" />
               <span>Start Tutorial</span>
             </button>
             <button
               onClick={() => { setIsOpen(false); setShowShortcuts(true); }}
-              className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-surface-hover flex items-center gap-3 transition-colors"
+              className="w-full text-left px-4 py-2 text-sm text-[#2C5E4A] font-medium hover:bg-[#F3F4F3] flex items-center gap-3 transition-colors"
             >
-              <Keyboard size={14} className="text-text-secondary" />
+              <Keyboard size={14} className="text-[#6A7B76]" />
               <span>Keyboard Shortcuts</span>
             </button>
             
-            <div className="h-px bg-border-subtle my-1"></div>
+            <div className="h-px bg-[#E5EBE8] my-1"></div>
             
             <button
               onClick={() => { setIsOpen(false); alert('Arduino Simulator v1.0.0\nBuilt with React & Konva'); }}
-              className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-surface-hover flex items-center gap-3 transition-colors"
+              className="w-full text-left px-4 py-2 text-sm text-[#2C5E4A] font-medium hover:bg-[#F3F4F3] flex items-center gap-3 transition-colors"
             >
-              <Info size={14} className="text-text-secondary" />
+              <Info size={14} className="text-[#6A7B76]" />
               <span>About</span>
             </button>
             <a
               href="https://github.com/Madhankannan02/oscilink/issues"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-surface-hover flex items-center gap-3 transition-colors"
+              className="w-full text-left px-4 py-2 text-sm text-[#2C5E4A] font-medium hover:bg-[#F3F4F3] flex items-center gap-3 transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              <Bug size={14} className="text-text-secondary" />
+              <Bug size={14} className="text-[#6A7B76]" />
               <span>Report a Bug</span>
             </a>
           </div>
@@ -93,30 +93,30 @@ export function HelpMenu() {
 
       {showShortcuts && createPortal(
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative bg-elevated p-6 rounded-xl shadow-2xl border border-border-default max-w-md w-full mx-4 zoom-in-95">
+          <div className="relative bg-white p-6 rounded-2xl shadow-2xl border border-[#E5EBE8] max-w-md w-full mx-4 zoom-in-95">
             <button 
               onClick={() => setShowShortcuts(false)}
-              className="absolute top-4 right-4 text-text-muted hover:text-text-primary transition-colors p-1"
+              className="absolute top-4 right-4 text-[#6A7B76] hover:text-[#2C5E4A] transition-colors p-1"
             >
               <X size={20} />
             </button>
             
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center text-primary">
+              <div className="w-10 h-10 bg-[#F3F4F3] rounded-lg flex items-center justify-center text-[#2C5E4A]">
                 <Keyboard size={20} />
               </div>
-              <h2 className="text-xl font-bold text-text-primary">Keyboard Shortcuts</h2>
+              <h2 className="text-xl font-bold text-[#2C5E4A]">Keyboard Shortcuts</h2>
             </div>
             
             <div className="grid grid-cols-1 gap-2">
               {SHORTCUTS.map((shortcut, idx) => (
-                <div key={idx} className="flex items-center justify-between py-2 border-b border-border-subtle last:border-0">
-                  <span className="text-sm text-text-secondary">{shortcut.action}</span>
+                <div key={idx} className="flex items-center justify-between py-2 border-b border-[#E5EBE8] last:border-0">
+                  <span className="text-sm font-medium text-[#6A7B76]">{shortcut.action}</span>
                   <div className="flex gap-1">
                     {shortcut.keys.split('+').map((key, i) => (
                       <React.Fragment key={i}>
-                        {i > 0 && <span className="text-text-muted text-xs mx-0.5 mt-1">+</span>}
-                        <kbd className="px-2 py-1 bg-surface rounded border border-border-default text-xs font-mono text-text-primary shadow-sm">
+                        {i > 0 && <span className="text-[#B5C2BF] text-xs mx-0.5 mt-1">+</span>}
+                        <kbd className="px-2 py-1 bg-[#F3F4F3] rounded border border-[#E5EBE8] text-xs font-mono font-bold text-[#2C5E4A] shadow-sm">
                           {key.trim()}
                         </kbd>
                       </React.Fragment>

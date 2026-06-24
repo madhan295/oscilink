@@ -27,13 +27,13 @@ const SerialLineItem = React.memo(({ line, showTimestamp }: { line: SerialLine; 
   const parts = line.text.split('\n');
   const timePrefix = showTimestamp ? `[${formatTime(line.timestamp)}] ` : '';
 
-  let colorClass = 'text-green-400';
+  let colorClass = 'text-[#2C5E4A]';
   let isItalic = false;
 
   if (line.type === 'input') {
-    colorClass = 'text-cyan-400';
+    colorClass = 'text-[#5B9DF6]';
   } else if (line.type === 'system') {
-    colorClass = 'text-gray-400';
+    colorClass = 'text-[#6A7B76]';
     isItalic = true;
   }
 
@@ -44,8 +44,8 @@ const SerialLineItem = React.memo(({ line, showTimestamp }: { line: SerialLine; 
         if (part === '' && index > 0 && index === parts.length - 1) return null;
         
         return (
-          <div key={`${line.id}-${index}`} className={`${colorClass} ${isItalic ? 'italic' : ''} leading-relaxed whitespace-pre-wrap break-all`}>
-            {showTimestamp && <span className="text-gray-500 mr-2 select-none">{timePrefix}</span>}
+          <div key={`${line.id}-${index}`} className={`${colorClass} ${isItalic ? 'italic' : ''} leading-relaxed whitespace-pre-wrap break-all font-medium`}>
+            {showTimestamp && <span className="text-[#B5C2BF] mr-2 select-none">{timePrefix}</span>}
             {part}
           </div>
         );
@@ -130,19 +130,14 @@ export const SerialMonitor: React.FC = () => {
   const linesCleared = renderedLines.length - linesToRender.length;
 
   return (
-    <div className="flex flex-col h-full bg-surface border-t border-border">
+    <div className="flex flex-col h-full bg-transparent">
       {/* Header Controls */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-surface text-sm">
-        <div className="flex items-center gap-2 text-text-secondary font-medium">
-          <Terminal size={16} />
-          <span>Serial Monitor</span>
-        </div>
-        
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-2 py-2 border-b border-[#E5EBE8] bg-[#F3F4F3] text-[13px]">
+        <div className="flex items-center gap-2">
           <select 
             value={baudRate} 
             onChange={(e) => setBaudRate(Number(e.target.value))}
-            className="bg-background text-text border border-border rounded px-2 py-1 text-xs outline-none"
+            className="bg-white text-[#2C5E4A] border border-black/5 shadow-sm rounded-md px-2 py-1 outline-none focus:ring-1 focus:ring-[#82b49b] font-medium"
           >
             {BAUD_RATES.map(rate => (
               <option key={rate} value={rate}>{rate} baud</option>
@@ -152,38 +147,40 @@ export const SerialMonitor: React.FC = () => {
           <select 
             value={lineEnding} 
             onChange={(e) => setLineEnding(e.target.value)}
-            className="bg-background text-text border border-border rounded px-2 py-1 text-xs outline-none"
+            className="bg-white text-[#2C5E4A] border border-black/5 shadow-sm rounded-md px-2 py-1 outline-none focus:ring-1 focus:ring-[#82b49b] font-medium"
           >
             {LINE_ENDINGS.map(le => (
               <option key={le.label} value={le.value}>{le.label}</option>
             ))}
           </select>
+        </div>
 
-          <label className="flex items-center gap-1 cursor-pointer text-xs text-text-secondary hover:text-text transition-colors">
+        <div className="flex items-center gap-2.5">
+          <label className="flex items-center gap-1.5 cursor-pointer text-[#2C5E4A]/70 hover:text-[#2C5E4A] transition-colors font-medium">
             <input 
               type="checkbox" 
               checked={showTimestamps} 
               onChange={(e) => setShowTimestamps(e.target.checked)}
-              className="accent-primary"
+              className="accent-[#2C5E4A]"
             />
-            <Clock size={14} className="ml-0.5" />
+            <Clock size={14} />
           </label>
 
-          <label className="flex items-center gap-1 cursor-pointer text-xs text-text-secondary hover:text-text transition-colors">
+          <label className="flex items-center gap-1.5 cursor-pointer text-[#2C5E4A]/70 hover:text-[#2C5E4A] transition-colors font-medium">
             <input 
               type="checkbox" 
               checked={autoscroll} 
               onChange={(e) => setAutoscroll(e.target.checked)}
-              className="accent-primary"
+              className="accent-[#2C5E4A]"
             />
-            <ArrowDown size={14} className="ml-0.5" />
+            <ArrowDown size={14} />
           </label>
 
-          <div className="w-px h-4 bg-border mx-1" />
+          <div className="w-px h-4 bg-[#E5EBE8] mx-0.5" />
 
           <button 
             onClick={clearSerial}
-            className="text-text-muted hover:text-error transition-colors p-1 rounded"
+            className="text-[#B5C2BF] hover:bg-[#FCEAEB] hover:text-[#FF8A8A] transition-colors p-1.5 rounded-md"
             title="Clear output"
           >
             <Trash2 size={16} />
@@ -194,17 +191,17 @@ export const SerialMonitor: React.FC = () => {
       {/* Output Area */}
       <div 
         ref={outputRef}
-        className="flex-1 overflow-y-auto bg-[#1E1E1E] text-text p-2 font-mono text-[12px] custom-scrollbar"
+        className="flex-1 overflow-y-auto bg-white text-[#2C5E4A] p-4 font-mono text-[13px] custom-scrollbar"
       >
         {renderedLines.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-text-muted opacity-50">
-            <Terminal size={32} className="mb-2" />
-            <p>Serial output will appear here when the simulation runs</p>
+          <div className="h-full flex flex-col items-center justify-center text-[#6A7B76] opacity-60">
+            <Terminal size={32} className="mb-3 text-[#B5C2BF]" />
+            <p className="font-medium">Serial output will appear here when the simulation runs</p>
           </div>
         ) : (
-          <div className="flex flex-col min-h-full justify-end">
+          <div className="flex flex-col min-h-full justify-end gap-0.5">
             {linesCleared > 0 && (
-              <div className="text-gray-500 italic mb-2 text-center text-[11px]">
+              <div className="text-[#B5C2BF] italic mb-3 text-center text-[12px] font-sans">
                 --- {linesCleared} older lines cleared to conserve memory ---
               </div>
             )}
@@ -216,22 +213,22 @@ export const SerialMonitor: React.FC = () => {
       </div>
 
       {/* Input Row */}
-      <div className="flex items-center p-2 bg-[#1E1E1E] border-t border-[#333]">
+      <div className="flex items-center p-3 bg-white border-t border-[#E5EBE8]">
         <input
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type message to send..."
-          className="flex-1 bg-[#2D2D2D] text-text font-mono text-[12px] rounded px-3 py-1.5 outline-none focus:ring-1 focus:ring-primary/50 placeholder-gray-500"
+          className="flex-1 bg-[#F3F4F3] text-[#2C5E4A] font-mono text-[13px] font-medium rounded-lg px-4 py-2 outline-none focus:ring-1 focus:ring-[#82b49b] placeholder-[#B5C2BF]"
         />
         <button
           onClick={handleSend}
           disabled={!inputValue}
-          className={`ml-2 p-1.5 rounded transition-colors ${!inputValue ? 'text-gray-600 cursor-not-allowed' : 'text-primary hover:bg-primary/10'}`}
+          className={`ml-3 p-2 rounded-lg transition-colors ${!inputValue ? 'text-[#B5C2BF] cursor-not-allowed' : 'text-[#2C5E4A] bg-[#d2e8d6]/50 hover:bg-[#d2e8d6]'}`}
           title="Send"
         >
-          <Send size={16} />
+          <Send size={18} className="translate-x-[-1px] translate-y-[1px]" />
         </button>
       </div>
     </div>
