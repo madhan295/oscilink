@@ -101,7 +101,7 @@ const SingleSelectionContent = ({
       <HeaderSection component={selectedComponent} />
       <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
         <div className="p-4 space-y-6">
-          <PositionRotationSection component={selectedComponent} updatePos={updateComponentPosition} updateRot={updateComponentRotation} />
+          <PositionRotationSection component={selectedComponent} updatePos={updateComponentPosition} updateRot={updateComponentRotation} updateProps={updateComponentProperties} />
           <Divider />
           <ComponentSpecificSection component={selectedComponent} updateProps={updateComponentProperties} simRunning={simulationStatus === 'RUNNING'} />
           
@@ -158,16 +158,18 @@ const HeaderSection = ({ component }: { component: CircuitComponent }) => {
 const PositionRotationSection = ({ 
   component, 
   updatePos, 
-  updateRot 
+  updateRot,
+  updateProps
 }: { 
   component: CircuitComponent; 
   updatePos: (id: string, pos: {x: number, y: number}) => void;
   updateRot: (id: string, rot: number) => void;
+  updateProps: (id: string, props: any) => void;
 }) => {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-sm font-bold text-[#2C5E4A]">
-        <Settings className="w-4 h-4 text-[#82b49b]" /> Position & Rotation
+        <Settings className="w-4 h-4 text-[#82b49b]" /> Position & Transform
       </div>
       
       <div className="grid grid-cols-2 gap-3">
@@ -191,21 +193,47 @@ const PositionRotationSection = ({
         </div>
       </div>
 
-      <div className="flex flex-col gap-1 mt-2">
-        <label className="text-xs font-medium text-[#6A7B76]">Rotation</label>
-        <div className="flex bg-[#F3F4F3] rounded-lg border border-[#E5EBE8] p-1 gap-1">
-          {[0, 90, 180, 270].map(deg => (
+      <div className="grid grid-cols-2 gap-3 mt-2">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-[#6A7B76]">Rotation</label>
+          <div className="flex bg-[#F3F4F3] rounded-lg border border-[#E5EBE8] p-1 gap-1">
+            {[0, 90, 180, 270].map(deg => (
+              <button 
+                key={deg}
+                onClick={() => updateRot(component.id, deg)}
+                className={clsx(
+                  "flex-1 py-1 text-[11px] font-bold rounded-md transition-all border",
+                  component.rotation === deg ? "bg-white text-[#2C5E4A] shadow-sm border-[#E5EBE8]" : "border-transparent text-[#6A7B76] hover:text-[#2C5E4A] hover:bg-[#d2e8d6]/50"
+                )}
+              >
+                {deg}°
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-[#6A7B76]">Flip</label>
+          <div className="flex bg-[#F3F4F3] rounded-lg border border-[#E5EBE8] p-1 gap-1 h-[28px]">
             <button 
-              key={deg}
-              onClick={() => updateRot(component.id, deg)}
+              onClick={() => updateProps(component.id, { flipX: !component.properties?.flipX })}
               className={clsx(
-                "flex-1 py-1.5 text-xs font-bold rounded-md transition-all border",
-                component.rotation === deg ? "bg-white text-[#2C5E4A] shadow-sm border-[#E5EBE8]" : "border-transparent text-[#6A7B76] hover:text-[#2C5E4A] hover:bg-[#d2e8d6]/50"
+                "flex-1 py-0.5 text-[11px] font-bold rounded-md transition-all border",
+                component.properties?.flipX ? "bg-white text-[#2C5E4A] shadow-sm border-[#E5EBE8]" : "border-transparent text-[#6A7B76] hover:text-[#2C5E4A] hover:bg-[#d2e8d6]/50"
               )}
             >
-              {deg}°
+              Horiz
             </button>
-          ))}
+            <button 
+              onClick={() => updateProps(component.id, { flipY: !component.properties?.flipY })}
+              className={clsx(
+                "flex-1 py-0.5 text-[11px] font-bold rounded-md transition-all border",
+                component.properties?.flipY ? "bg-white text-[#2C5E4A] shadow-sm border-[#E5EBE8]" : "border-transparent text-[#6A7B76] hover:text-[#2C5E4A] hover:bg-[#d2e8d6]/50"
+              )}
+            >
+              Vert
+            </button>
+          </div>
         </div>
       </div>
     </div>

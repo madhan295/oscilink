@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PanelLeft, PanelRight, Play, Square, Cpu, FileCode2, FolderOpen, Save, AlertTriangle, AlertCircle, Zap, Settings as SettingsIcon } from 'lucide-react';
+import { PanelLeft, PanelRight, Play, Square, Cpu, FileCode2, FolderOpen, Save, AlertTriangle, AlertCircle, Zap } from 'lucide-react';
 import { UndoRedoButtons } from './UndoRedoButtons';
 import { useCompiler } from '../../hooks/useCompiler';
 import { useSimulation } from '../../hooks/useSimulation';
@@ -11,7 +11,6 @@ import { useUiStore } from '../../store/uiStore';
 import { deserializeProject, loadProjectFromFile } from '../../utils/projectSerializer';
 import { CodeEditorRef } from '../editor/CodeEditor';
 import toast from 'react-hot-toast';
-import { Button } from './Button';
 import { UserMenu } from './UserMenu';
 import { HelpMenu } from './HelpMenu';
 import { clsx } from 'clsx';
@@ -111,19 +110,19 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
           
           <div className="flex items-center gap-1 text-[#2C5E4A]">
             <Tooltip position="bottom" content="New Project" shortcut="Ctrl+N">
-              <Button variant="ghost" size="sm" className="px-2 hover:bg-black/5 text-[#2C5E4A]" onClick={handleNewProject}>
+              <button className="p-2 rounded-md hover:bg-[#2C5E4A]/10 text-[#2C5E4A] transition-colors" onClick={handleNewProject}>
                 <FileCode2 size={18} />
-              </Button>
+              </button>
             </Tooltip>
             <Tooltip position="bottom" content="Open Project" shortcut="Ctrl+O">
-              <Button variant="ghost" size="sm" className="px-2 hover:bg-black/5 text-[#2C5E4A]" onClick={handleOpenProject}>
+              <button className="p-2 rounded-md hover:bg-[#2C5E4A]/10 text-[#2C5E4A] transition-colors" onClick={handleOpenProject}>
                 <FolderOpen size={18} />
-              </Button>
+              </button>
             </Tooltip>
             <Tooltip position="bottom" content="Save Project" shortcut="Ctrl+S">
-              <Button variant="ghost" size="sm" className="px-2 hover:bg-black/5 text-[#2C5E4A]" onClick={() => setSaveOptionsModalOpen(true)}>
+              <button className="p-2 rounded-md hover:bg-[#2C5E4A]/10 text-[#2C5E4A] transition-colors" onClick={() => setSaveOptionsModalOpen(true)}>
                 <Save size={18} />
-              </Button>
+              </button>
             </Tooltip>
           </div>
         </div>
@@ -172,10 +171,8 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
           <div className="flex items-center gap-1 text-[#2C5E4A]">
             {hasDiagnostics && (
               <Tooltip position="bottom" content="Toggle Diagnostics Panel">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={clsx('px-2 hover:bg-[#2C5E4A]/10 text-[#2C5E4A]', errorPanelOpen && 'bg-[#2C5E4A]/15')}
+                <button 
+                  className={clsx('p-2 rounded-md hover:bg-[#2C5E4A]/10 text-[#2C5E4A] transition-colors', errorPanelOpen && 'bg-[#2C5E4A]/15')}
                   onClick={() => setErrorPanelOpen(!errorPanelOpen)} 
                 >
                   <div className="relative flex items-center justify-center">
@@ -184,20 +181,20 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
                       {totalErrors > 0 ? totalErrors : totalWarnings > 0 ? totalWarnings : circuitErrors.length}
                     </span>
                   </div>
-                </Button>
+                </button>
               </Tooltip>
             )}
 
             <Tooltip position="bottom" content="Toggle Editor Panel">
-              <Button variant="ghost" size="sm" className={clsx('px-2 hover:bg-[#2C5E4A]/10 text-[#2C5E4A]', leftOpen && 'bg-[#2C5E4A]/15')} onClick={() => setLeftOpen(!leftOpen)}>
+              <button className={clsx('p-2 rounded-md hover:bg-[#2C5E4A]/10 text-[#2C5E4A] transition-colors', leftOpen && 'bg-[#2C5E4A]/15')} onClick={() => setLeftOpen(!leftOpen)}>
                 <PanelLeft size={18} />
-              </Button>
+              </button>
             </Tooltip>
             
             <Tooltip position="bottom" content="Toggle Properties Panel">
-              <Button variant="ghost" size="sm" className={clsx('px-2 hover:bg-[#2C5E4A]/10 text-[#2C5E4A]', rightOpen && 'bg-[#2C5E4A]/15')} onClick={() => setRightOpen(!rightOpen)}>
+              <button className={clsx('p-2 rounded-md hover:bg-[#2C5E4A]/10 text-[#2C5E4A] transition-colors', rightOpen && 'bg-[#2C5E4A]/15')} onClick={() => setRightOpen(!rightOpen)}>
                 <PanelRight size={18} />
-              </Button>
+              </button>
             </Tooltip>
             
             <div className="ml-1 flex items-center justify-center">
@@ -212,29 +209,29 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
       </header>
 
       {showConfirmModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 pointer-events-auto">
-          <div className="bg-elevated border border-border-default rounded-xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
-            <h2 className="text-lg font-semibold text-text-primary">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 backdrop-blur-sm animate-in fade-in duration-200 pointer-events-auto">
+          <div className="bg-white border border-[#E5EBE8] rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] w-full max-w-sm p-6 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <h2 className="text-lg font-bold text-[#2C5E4A]">
               {confirmAction === 'new' ? 'Create New Project' : 'Open Project'}
             </h2>
-            <p className="text-sm text-text-secondary leading-relaxed">
+            <p className="text-sm text-[#6A7B76] font-medium leading-relaxed">
               {confirmAction === 'new' 
                 ? 'Are you sure you want to start a new project? Any unsaved changes will be lost.' 
                 : 'Opening a project will discard your current work. Continue?'}
             </p>
             <div className="flex justify-end gap-3 mt-2">
-              <Button 
-                variant="ghost" 
+              <button 
+                className="px-5 py-2 rounded-full text-sm font-bold bg-black/5 hover:bg-black/10 text-[#2C5E4A] transition-colors"
                 onClick={() => setShowConfirmModal(false)}
               >
                 Cancel
-              </Button>
-              <Button 
-                variant="danger" 
+              </button>
+              <button 
+                className="px-5 py-2 rounded-full text-sm font-bold bg-[#FCEAEB] hover:bg-[#FF8A8A]/20 text-[#FF8A8A] transition-colors"
                 onClick={confirmAction === 'new' ? executeNewProject : executeOpenProject}
               >
                 {confirmAction === 'new' ? 'Start Fresh' : 'Continue'}
-              </Button>
+              </button>
             </div>
           </div>
         </div>

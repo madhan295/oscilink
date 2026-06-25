@@ -38,11 +38,11 @@ function App() {
       if (Date.now() - timeMs < sevenDays) {
         toast((t) => (
           <div className="flex flex-col gap-2">
-            <span className="font-semibold text-sm">An auto-saved project was found.</span>
+            <span className="font-semibold text-sm text-[#2C5E4A]">An auto-saved project was found.</span>
             <div className="flex gap-2 justify-end mt-1">
               <button
                 onClick={() => toast.dismiss(t.id)}
-                className="px-3 py-1 text-xs bg-surface-hover rounded text-text-secondary hover:text-text transition-colors"
+                className="px-4 py-1.5 text-xs bg-black/5 hover:bg-black/10 rounded-full text-[#2C5E4A] font-medium transition-colors"
               >
                 Dismiss
               </button>
@@ -56,7 +56,7 @@ function App() {
                     toast.error('Failed to restore auto-save');
                   }
                 }}
-                className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors font-medium"
+                className="px-4 py-1.5 text-xs bg-[#3C6A56] hover:bg-[#2F5343] text-white rounded-full font-medium transition-colors"
               >
                 Restore
               </button>
@@ -81,7 +81,18 @@ function App() {
       <SaveProjectModal />
       <WelcomeModal />
       <GuidedTour />
-      <Toaster position="bottom-right" toastOptions={{ style: { background: '#333', color: '#fff' } }} />
+      <Toaster 
+        position="bottom-right" 
+        toastOptions={{ 
+          style: { 
+            background: '#ffffff', 
+            color: '#2C5E4A',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+            border: '1px solid rgba(0,0,0,0.05)',
+            borderRadius: '12px'
+          } 
+        }} 
+      />
       <Toolbar 
         leftOpen={leftOpen} setLeftOpen={setLeftOpen} 
         rightOpen={rightOpen} setRightOpen={setRightOpen} 

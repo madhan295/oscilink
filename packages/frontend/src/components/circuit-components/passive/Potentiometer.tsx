@@ -194,6 +194,8 @@ export const Potentiometer = memo(({ component }: PotentiometerProps) => {
       x={component.position.x}
       y={component.position.y}
       rotation={component.rotation}
+      scaleX={component.properties?.flipX ? -1 : 1}
+      scaleY={component.properties?.flipY ? -1 : 1}
       draggable
       onDragStart={handleDragStart}
       onDragMove={handleDragMove}

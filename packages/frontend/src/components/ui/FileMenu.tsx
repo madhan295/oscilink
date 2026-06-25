@@ -197,11 +197,11 @@ export const FileMenu: React.FC = () => {
       )}
 
       {showSaveModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-surface border border-border rounded-lg shadow-2xl w-96 p-6 flex flex-col gap-4">
-            <h2 className="text-lg font-semibold text-text">Save Project</h2>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 backdrop-blur-sm">
+          <div className="bg-white border border-[#E5EBE8] rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] w-96 p-6 flex flex-col gap-4">
+            <h2 className="text-lg font-bold text-[#2C5E4A]">Save Project</h2>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-text-secondary">Project Name</label>
+              <label className="text-sm font-medium text-[#6A7B76]">Project Name</label>
               <input 
                 type="text" 
                 value={projectName}
@@ -210,7 +210,7 @@ export const FileMenu: React.FC = () => {
                   if (e.key === 'Enter') confirmSave();
                   if (e.key === 'Escape') setShowSaveModal(false);
                 }}
-                className="w-full px-3 py-2 bg-background border border-border rounded text-text outline-none focus:border-blue-500 transition-colors"
+                className="w-full px-3 py-2 bg-[#F3F4F3] border border-[#E5EBE8] rounded-lg text-[#2C5E4A] font-medium outline-none focus:border-[#82b49b] focus:ring-1 focus:ring-[#82b49b] transition-colors"
                 autoFocus
                 placeholder="Enter project name..."
               />
@@ -218,14 +218,14 @@ export const FileMenu: React.FC = () => {
             <div className="flex justify-end gap-3 mt-2">
               <button 
                 onClick={() => setShowSaveModal(false)}
-                className="px-4 py-2 rounded text-sm font-medium hover:bg-surface-hover text-text transition-colors"
+                className="px-5 py-2 rounded-full text-sm font-bold bg-black/5 hover:bg-black/10 text-[#2C5E4A] transition-colors"
               >
                 Cancel
               </button>
               <button 
                 onClick={confirmSave}
                 disabled={!projectName.trim()}
-                className="px-4 py-2 rounded text-sm font-medium bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
+                className="px-5 py-2 rounded-full text-sm font-bold bg-[#3C6A56] hover:bg-[#2F5343] disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
               >
                 Save
               </button>
@@ -236,20 +236,20 @@ export const FileMenu: React.FC = () => {
 
       {/* Confirmation Modal */}
       {confirmConfig.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-surface border border-border rounded-lg shadow-2xl w-96 p-6 flex flex-col gap-4">
-            <h2 className="text-lg font-semibold text-text">{confirmConfig.title}</h2>
-            <p className="text-sm text-text-secondary">{confirmConfig.message}</p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 backdrop-blur-sm">
+          <div className="bg-white border border-[#E5EBE8] rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] w-96 p-6 flex flex-col gap-4">
+            <h2 className="text-lg font-bold text-[#2C5E4A]">{confirmConfig.title}</h2>
+            <p className="text-sm text-[#6A7B76] font-medium">{confirmConfig.message}</p>
             <div className="flex justify-end gap-3 mt-2">
               <button 
                 onClick={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
-                className="px-4 py-2 rounded text-sm font-medium hover:bg-surface-hover text-text transition-colors"
+                className="px-5 py-2 rounded-full text-sm font-bold bg-black/5 hover:bg-black/10 text-[#2C5E4A] transition-colors"
               >
                 Cancel
               </button>
               <button 
                 onClick={confirmConfig.onConfirm}
-                className="px-4 py-2 rounded text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition-colors"
+                className="px-5 py-2 rounded-full text-sm font-bold bg-[#FCEAEB] hover:bg-[#FF8A8A]/20 text-[#FF8A8A] transition-colors"
               >
                 Continue
               </button>

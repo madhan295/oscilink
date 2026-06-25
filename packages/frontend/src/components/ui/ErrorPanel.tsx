@@ -49,32 +49,32 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="absolute bottom-6 right-6 w-96 max-h-[60vh] bg-surface border border-border rounded-lg shadow-2xl flex flex-col z-50 overflow-hidden font-sans">
-      <div className="flex items-center justify-between p-3 border-b border-border bg-surface-hover">
-        <h3 className="font-semibold text-text flex items-center gap-2">
-          <AlertTriangle size={18} className="text-orange-500" />
+    <div className="absolute bottom-6 right-6 w-[420px] max-h-[60vh] bg-white border border-[#E5EBE8] rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] flex flex-col z-50 overflow-hidden font-sans">
+      <div className="flex items-center justify-between p-3.5 border-b border-[#E5EBE8] bg-[#F3F4F3]">
+        <h3 className="font-bold text-[#2C5E4A] flex items-center gap-2">
+          <AlertTriangle size={18} className="text-[#f59e0b]" />
           Diagnostics
         </h3>
         {onClose && (
-          <button onClick={onClose} className="text-text-secondary hover:text-text transition-colors">
+          <button onClick={onClose} className="text-[#B5C2BF] hover:text-[#2C5E4A] transition-colors p-1 rounded-md hover:bg-black/5">
             <X size={18} />
           </button>
         )}
       </div>
 
-      <div className="overflow-y-auto flex-1 p-2 space-y-2 custom-scrollbar">
+      <div className="overflow-y-auto flex-1 p-3 space-y-3 custom-scrollbar">
         {/* Circuit Errors Section */}
         {sortedCircuitErrors.length > 0 && (
-          <div className="border border-border rounded bg-background overflow-hidden">
+          <div className="border border-[#E5EBE8] rounded-xl bg-white overflow-hidden shadow-sm">
             <button 
-              className="w-full flex items-center justify-between p-2 hover:bg-surface transition-colors text-sm font-medium"
+              className="w-full flex items-center justify-between p-3 hover:bg-[#F3F4F3] transition-colors text-sm font-bold text-[#2C5E4A]"
               onClick={() => setCircuitExpanded(!circuitExpanded)}
             >
               <div className="flex items-center gap-2">
-                {circuitExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                {circuitExpanded ? <ChevronDown size={16} className="text-[#82b49b]" /> : <ChevronRight size={16} className="text-[#82b49b]" />}
                 <span>Circuit Design</span>
               </div>
-              <span className="bg-red-500/20 text-red-400 text-xs px-2 py-0.5 rounded-full">
+              <span className="bg-[#FCEAEB] text-[#FF8A8A] text-[11px] px-2 py-0.5 rounded-full font-bold">
                 {sortedCircuitErrors.length}
               </span>
             </button>
@@ -84,36 +84,38 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
               circuitExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
             )}>
               <div className="overflow-hidden">
-                <div className="border-t border-border flex flex-col">
+                <div className="border-t border-[#E5EBE8] flex flex-col bg-white">
                   {sortedCircuitErrors.map(err => (
                     <div 
                       key={err.id} 
-                      className="p-3 border-b last:border-b-0 border-border hover:bg-surface/50 cursor-pointer transition-colors"
+                      className="p-3 border-b last:border-b-0 border-[#E5EBE8] hover:bg-[#F3F4F3]/50 cursor-pointer transition-colors"
                       onClick={() => handleRowClick(err)}
                     >
-                      <div className="flex items-start gap-2">
-                        {getSeverityIcon(err.severity)}
+                      <div className="flex items-start gap-2.5">
+                        <div className="mt-0.5">
+                          {getSeverityIcon(err.severity)}
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-baseline justify-between gap-2 mb-1">
-                            <span className="font-bold text-sm text-text">
+                          <div className="flex items-baseline justify-between gap-2 mb-1.5">
+                            <span className="font-bold text-sm text-[#2C5E4A]">
                               {getReadableType(err.type)}
                             </span>
                             {err.affectedComponentIds && err.affectedComponentIds.length > 0 && (
                               <div className="flex flex-wrap gap-1 justify-end">
                                 {err.affectedComponentIds.map(id => (
-                                  <span key={id} className="text-[10px] px-1.5 py-0.5 bg-surface-hover border border-border rounded text-text-secondary whitespace-nowrap">
+                                  <span key={id} className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-black/5 rounded text-[#6A7B76] whitespace-nowrap">
                                     {id.split('-')[0]}
                                   </span>
                                 ))}
                               </div>
                             )}
                           </div>
-                          <p className="text-sm text-text-secondary leading-snug">
+                          <p className="text-sm text-[#6A7B76] font-medium leading-relaxed">
                             {err.message}
                           </p>
                           {err.hint && (
-                            <p className="text-xs text-text-muted italic mt-1.5">
-                              Tip: {err.hint}
+                            <p className="text-xs text-[#82b49b] font-medium italic mt-2 flex items-start gap-1">
+                              <span className="font-bold not-italic text-[#2C5E4A]">Tip:</span> {err.hint}
                             </p>
                           )}
                         </div>
@@ -128,16 +130,16 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
 
         {/* Compilation Errors Section */}
         {compilationErrors.length > 0 && (
-          <div className="border border-border rounded bg-background overflow-hidden">
+          <div className="border border-[#E5EBE8] rounded-xl bg-white overflow-hidden shadow-sm">
             <button 
-              className="w-full flex items-center justify-between p-2 hover:bg-surface transition-colors text-sm font-medium"
+              className="w-full flex items-center justify-between p-3 hover:bg-[#F3F4F3] transition-colors text-sm font-bold text-[#2C5E4A]"
               onClick={() => setCompilerExpanded(!compilerExpanded)}
             >
               <div className="flex items-center gap-2">
-                {compilerExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                {compilerExpanded ? <ChevronDown size={16} className="text-[#82b49b]" /> : <ChevronRight size={16} className="text-[#82b49b]" />}
                 <span>Compilation</span>
               </div>
-              <span className="bg-red-500/20 text-red-400 text-xs px-2 py-0.5 rounded-full">
+              <span className="bg-[#FCEAEB] text-[#FF8A8A] text-[11px] px-2 py-0.5 rounded-full font-bold">
                 {compilationErrors.length}
               </span>
             </button>
@@ -147,10 +149,10 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
               compilerExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
             )}>
               <div className="overflow-hidden">
-                <div className="border-t border-border flex flex-col p-2 space-y-2">
+                <div className="border-t border-[#E5EBE8] flex flex-col p-3 space-y-2 bg-white">
                   {compilationErrors.map((err, i) => (
-                    <div key={i} className="text-sm text-red-400 font-mono bg-red-500/5 p-2 rounded border border-red-500/10 break-words">
-                      <span className="font-bold text-red-300">Line {err.line}:</span> {err.message}
+                    <div key={i} className="text-sm font-medium text-[#ef4444] font-mono bg-[#ef4444]/5 p-2.5 rounded-lg border border-[#ef4444]/10 break-words leading-relaxed">
+                      <span className="font-bold text-[#dc2626]">Line {err.line}:</span> {err.message}
                     </div>
                   ))}
                 </div>
@@ -161,16 +163,16 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
 
         {/* Static Analysis Errors Section */}
         {staticErrors.length > 0 && (
-          <div className="border border-border rounded bg-background overflow-hidden">
+          <div className="border border-[#E5EBE8] rounded-xl bg-white overflow-hidden shadow-sm">
             <button 
-              className="w-full flex items-center justify-between p-2 hover:bg-surface transition-colors text-sm font-medium"
+              className="w-full flex items-center justify-between p-3 hover:bg-[#F3F4F3] transition-colors text-sm font-bold text-[#2C5E4A]"
               onClick={() => setStaticExpanded(!staticExpanded)}
             >
               <div className="flex items-center gap-2">
-                {staticExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                {staticExpanded ? <ChevronDown size={16} className="text-[#82b49b]" /> : <ChevronRight size={16} className="text-[#82b49b]" />}
                 <span>Static Analysis</span>
               </div>
-              <span className={`${staticErrors.some(e => e.severity === 'error') ? 'bg-red-500/20 text-red-400' : 'bg-orange-500/20 text-orange-400'} text-xs px-2 py-0.5 rounded-full`}>
+              <span className={`${staticErrors.some(e => e.severity === 'error') ? 'bg-[#FCEAEB] text-[#FF8A8A]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'} text-[11px] px-2 py-0.5 rounded-full font-bold`}>
                 {staticErrors.length}
               </span>
             </button>
@@ -180,14 +182,14 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
               staticExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
             )}>
               <div className="overflow-hidden">
-                <div className="border-t border-border flex flex-col p-2 space-y-2">
+                <div className="border-t border-[#E5EBE8] flex flex-col p-3 space-y-2 bg-white">
                   {staticErrors.map((err, i) => (
-                    <div key={i} className={`text-sm ${err.severity === 'error' ? 'text-red-400 bg-red-500/5 border-red-500/10' : 'text-orange-400 bg-orange-500/5 border-orange-500/10'} p-2 rounded border break-words`}>
-                      <div className="flex items-start gap-2">
-                        {err.severity === 'error' ? <AlertCircle size={14} className="mt-0.5 flex-shrink-0" /> : <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />}
+                    <div key={i} className={`text-sm font-medium ${err.severity === 'error' ? 'text-[#ef4444] bg-[#ef4444]/5 border-[#ef4444]/10' : 'text-[#d97706] bg-[#f59e0b]/5 border-[#f59e0b]/10'} p-2.5 rounded-lg border break-words leading-relaxed`}>
+                      <div className="flex items-start gap-2.5">
+                        {err.severity === 'error' ? <AlertCircle size={16} className="mt-0.5 flex-shrink-0" /> : <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />}
                         <div className="flex-1">
                           <p><span className="font-bold opacity-75">Line {err.line}:</span> {err.message}</p>
-                          {err.hint && <p className="text-xs italic opacity-70 mt-1">Tip: {err.hint}</p>}
+                          {err.hint && <p className="text-xs italic opacity-70 mt-1.5 font-medium">Tip: {err.hint}</p>}
                         </div>
                       </div>
                     </div>
@@ -200,16 +202,16 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
 
         {/* Runtime Warnings Section */}
         {runtimeWarnings.length > 0 && (
-          <div className="border border-border rounded bg-background overflow-hidden">
+          <div className="border border-[#E5EBE8] rounded-xl bg-white overflow-hidden shadow-sm">
             <button 
-              className="w-full flex items-center justify-between p-2 hover:bg-surface transition-colors text-sm font-medium"
+              className="w-full flex items-center justify-between p-3 hover:bg-[#F3F4F3] transition-colors text-sm font-bold text-[#2C5E4A]"
               onClick={() => setRuntimeExpanded(!runtimeExpanded)}
             >
               <div className="flex items-center gap-2">
-                {runtimeExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                {runtimeExpanded ? <ChevronDown size={16} className="text-[#82b49b]" /> : <ChevronRight size={16} className="text-[#82b49b]" />}
                 <span>Runtime Warnings</span>
               </div>
-              <span className="bg-orange-500/20 text-orange-400 text-xs px-2 py-0.5 rounded-full">
+              <span className="bg-[#f59e0b]/10 text-[#f59e0b] text-[11px] px-2 py-0.5 rounded-full font-bold">
                 {runtimeWarnings.length}
               </span>
             </button>
@@ -219,11 +221,17 @@ export const ErrorPanel: React.FC<ErrorPanelProps> = ({ onClose }) => {
               runtimeExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
             )}>
               <div className="overflow-hidden">
-                <div className="border-t border-border flex flex-col p-2 space-y-2">
+                <div className="border-t border-[#E5EBE8] flex flex-col bg-white">
                   {runtimeWarnings.map((warn, i) => (
-                    <div key={i} className="text-sm text-orange-400 bg-orange-500/5 p-2 rounded border border-orange-500/10 break-words flex items-start gap-2">
-                      <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
-                      <span>{warn}</span>
+                    <div key={i} className="p-3 border-b last:border-b-0 border-[#E5EBE8]">
+                      <div className="flex items-start gap-2.5">
+                        <AlertTriangle size={16} className="text-[#f59e0b] mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium text-[#d97706] leading-relaxed">
+                            {warn}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

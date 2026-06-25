@@ -176,6 +176,8 @@ export const InteractionLayer: React.FC = () => {
             x={comp.position.x} 
             y={comp.position.y} 
             rotation={comp.rotation || 0}
+            scaleX={comp.properties?.flipX ? -1 : 1}
+            scaleY={comp.properties?.flipY ? -1 : 1}
           >
             <Rect
               x={selX} y={selY}

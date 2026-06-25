@@ -92,7 +92,7 @@ export function Tooltip({
       {isVisible && createPortal(
         <div
           className={clsx(
-            'fixed z-[100] px-2.5 py-1.5 bg-elevated text-text-primary text-xs font-medium rounded shadow-lg border border-border-default pointer-events-none animate-in fade-in zoom-in-95 duration-150',
+            'fixed z-[100] px-3 py-1.5 bg-[#2C5E4A] text-white text-xs font-bold rounded-lg shadow-[0_4px_12px_rgba(44,94,74,0.2)] pointer-events-none animate-in fade-in zoom-in-95 duration-150',
             'flex items-center gap-2 whitespace-nowrap'
           )}
           style={{
@@ -101,12 +101,14 @@ export function Tooltip({
             transform: getTransform()
           }}
         >
-          <span>{content}</span>
-          {shortcut && (
-            <span className="text-[10px] text-text-muted bg-surface px-1.5 py-0.5 rounded-sm border border-border-subtle uppercase tracking-wider">
-              {shortcut}
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            <span>{content}</span>
+            {shortcut && (
+              <span className="text-[10px] text-[#B5C2BF] font-mono bg-[#1E4334] px-1.5 py-0.5 rounded ml-1 tracking-wider opacity-90">
+                {shortcut}
+              </span>
+            )}
+          </div>
         </div>,
         document.body
       )}
