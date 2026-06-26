@@ -53,7 +53,7 @@ export function detectShortCircuit(_components: CircuitComponent[], _wires: Wire
       }
 
       // Add other pins of the SAME component (internal paths), except complex ones
-      if (comp && comp.pins && !['ARDUINO_UNO', 'PUSH_BUTTON', 'SWITCH', 'LED', 'ULTRASONIC_SENSOR', 'RELAY'].includes(comp.type)) {
+      if (comp && comp.pins && !['ARDUINO_UNO', 'PUSH_BUTTON', 'SWITCH', 'LED', 'ULTRASONIC_SENSOR', 'RELAY', 'LCD_16X2_I2C', 'LCD_16X2', 'BREADBOARD'].includes(comp.type)) {
         for (const pin of comp.pins) {
           if (pin.id !== node.pinId) {
             const internalNeighborId = `${comp.id}.${pin.id}`;
@@ -250,7 +250,9 @@ export function detectFloatingAnalogInput(components: CircuitComponent[], _wires
         const connectedComps = graph.getConnectedComponents(arduino.id, pin.id);
         const hasDefinedSource = connectedComps.some(c => 
           c.type === 'POTENTIOMETER' || 
-          c.type === 'ULTRASONIC_SENSOR'
+          c.type === 'ULTRASONIC_SENSOR' ||
+          c.type === 'LCD_16X2_I2C' ||
+          c.type === 'LCD_16X2'
         );
         
         if (!hasDefinedSource) {

@@ -1,4 +1,4 @@
-import { useState, useContext, useCallback, memo } from 'react';
+import { useState, useContext, useCallback, memo, useEffect } from 'react';
 import { Group, Rect, Circle, Text, Line } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { CircuitComponent } from '../../../types/components';
@@ -14,6 +14,27 @@ const COMMONLY_USED_PINS = ['VCC', 'TRIG', 'ECHO', 'GND'];
 export const UltrasonicSensor = memo(({ component }: UltrasonicSensorProps) => {
   const [hoveredPin, setHoveredPin] = useState<string | null>(null);
   const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = useContext(CanvasContext);
+
+  // Migration for existing components that were created with old 5px pin layout
+  useEffect(() => {
+    const vccPin = component.pins['VCC'];
+    if (vccPin && vccPin.position.x !== -15) {
+      useWorkspaceStore.setState((state) => {
+        const comps = [...state.components];
+        const idx = comps.findIndex(c => c.id === component.id);
+        if (idx >= 0) {
+          const newPins = { ...comps[idx].pins };
+          if (newPins['VCC']) newPins['VCC'] = { ...newPins['VCC'], position: { x: -15, y: 0 } };
+          if (newPins['TRIG']) newPins['TRIG'] = { ...newPins['TRIG'], position: { x: -5, y: 0 } };
+          if (newPins['ECHO']) newPins['ECHO'] = { ...newPins['ECHO'], position: { x: 5, y: 0 } };
+          if (newPins['GND']) newPins['GND'] = { ...newPins['GND'], position: { x: 15, y: 0 } };
+          comps[idx] = { ...comps[idx], pins: newPins };
+          return { components: comps };
+        }
+        return state;
+      });
+    }
+  }, [component.id, component.pins]);
 
   const handleDragStart = useCallback(() => {
     useWorkspaceStore.getState().pushHistory();
@@ -106,7 +127,7 @@ export const UltrasonicSensor = memo(({ component }: UltrasonicSensorProps) => {
       onClick={handleClick}
       onTap={handleClick}
     >
-      <Group x={-52} y={-58}>
+      <Group x={-103} y={-116} scaleX={2} scaleY={2}>
         <Rect width={104} height={48} fill="#115268" cornerRadius={2} />
 
         {/* Mounting Holes */}

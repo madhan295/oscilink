@@ -43,7 +43,7 @@ export const getComponentBounds = (comp: CircuitComponent) => {
       width = 214; height = 72; offsetX = -50; offsetY = -72;
       break;
     case 'ULTRASONIC_SENSOR':
-      width = 104; height = 58; offsetX = -52; offsetY = -58;
+      width = 208; height = 116; offsetX = -103; offsetY = -116;
       break;
     case 'RELAY':
       width = 70; height = 100; offsetX = -35; offsetY = -50;
