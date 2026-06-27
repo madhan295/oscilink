@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PanelLeft, PanelRight, Play, Square, Cpu, FileCode2, FolderOpen, Save, AlertTriangle, AlertCircle, Zap } from 'lucide-react';
+import { PanelLeft, PanelRight, Play, Square, FileCode2, FolderOpen, Save, AlertTriangle, AlertCircle, Zap } from 'lucide-react';
 import { UndoRedoButtons } from './UndoRedoButtons';
 import { useCompiler } from '../../hooks/useCompiler';
 import { useSimulation } from '../../hooks/useSimulation';
@@ -100,8 +100,8 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
         {/* Left Section */}
         <div className="flex items-center gap-4 pl-1 flex-1">
           <div className="flex items-center gap-3">
-            <div className="bg-[#82b49b] w-10 h-10 flex items-center justify-center rounded-[10px] text-[#2C5E4A]">
-              <Cpu size={20} strokeWidth={2.5} />
+            <div className="flex items-center justify-center">
+              <img src="/favicon.svg" alt="Oscilink Logo" className="w-6 h-7 object-contain" />
             </div>
             <h1 className="text-lg font-bold text-[#2C5E4A] tracking-tight whitespace-nowrap">Oscilink</h1>
           </div>
