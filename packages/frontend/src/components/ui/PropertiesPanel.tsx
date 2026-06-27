@@ -392,24 +392,49 @@ const ComponentSpecificSection = ({
       )}
 
       {type === 'SERVO_MOTOR' && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-[#6A7B76]">Min Pulse (µs)</label>
-            <input 
-              type="number"
-              value={(props.minPulse as string | number) || 544}
-              onChange={(e) => updateProps(component.id, { minPulse: Number(e.target.value) })}
-              className="bg-[#F3F4F3] text-[#2C5E4A] font-medium border border-[#E5EBE8] rounded-md px-2 py-1.5 text-sm outline-none focus:border-[#82b49b] focus:ring-1 focus:ring-[#82b49b]"
-            />
+            <label className="text-xs font-medium text-[#6A7B76]">Servo Type</label>
+            <div className="flex bg-[#F3F4F3] rounded-lg border border-[#E5EBE8] p-1 gap-1">
+              <button 
+                onClick={() => updateProps(component.id, { servoType: 'positional' })}
+                className={clsx(
+                  "flex-1 py-1.5 text-xs font-bold rounded-md transition-all border",
+                  (props.servoType || 'positional') === 'positional' ? "bg-white text-[#2C5E4A] shadow-sm border-[#E5EBE8]" : "border-transparent text-[#6A7B76] hover:text-[#2C5E4A] hover:bg-[#d2e8d6]/50"
+                )}
+              >
+                Positional (180°)
+              </button>
+              <button 
+                onClick={() => updateProps(component.id, { servoType: 'continuous' })}
+                className={clsx(
+                  "flex-1 py-1.5 text-xs font-bold rounded-md transition-all border",
+                  props.servoType === 'continuous' ? "bg-white text-[#2C5E4A] shadow-sm border-[#E5EBE8]" : "border-transparent text-[#6A7B76] hover:text-[#2C5E4A] hover:bg-[#d2e8d6]/50"
+                )}
+              >
+                Continuous (360°)
+              </button>
+            </div>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-[#6A7B76]">Max Pulse (µs)</label>
-            <input 
-              type="number"
-              value={(props.maxPulse as string | number) || 2400}
-              onChange={(e) => updateProps(component.id, { maxPulse: Number(e.target.value) })}
-              className="bg-[#F3F4F3] text-[#2C5E4A] font-medium border border-[#E5EBE8] rounded-md px-2 py-1.5 text-sm outline-none focus:border-[#82b49b] focus:ring-1 focus:ring-[#82b49b]"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-[#6A7B76]">Min Pulse (µs)</label>
+              <input 
+                type="number"
+                value={(props.minPulse as string | number) || 544}
+                onChange={(e) => updateProps(component.id, { minPulse: Number(e.target.value) })}
+                className="bg-[#F3F4F3] text-[#2C5E4A] font-medium border border-[#E5EBE8] rounded-md px-2 py-1.5 text-sm outline-none focus:border-[#82b49b] focus:ring-1 focus:ring-[#82b49b]"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-[#6A7B76]">Max Pulse (µs)</label>
+              <input 
+                type="number"
+                value={(props.maxPulse as string | number) || 2400}
+                onChange={(e) => updateProps(component.id, { maxPulse: Number(e.target.value) })}
+                className="bg-[#F3F4F3] text-[#2C5E4A] font-medium border border-[#E5EBE8] rounded-md px-2 py-1.5 text-sm outline-none focus:border-[#82b49b] focus:ring-1 focus:ring-[#82b49b]"
+              />
+            </div>
           </div>
         </div>
       )}
