@@ -104,7 +104,7 @@ export default function Home() {
 <!-- Arduino Mockup -->
 <div class="absolute inset-0 rounded-lg shadow-sm flex items-center justify-center overflow-hidden bg-white">
 <div class="relative w-full h-full flex items-center justify-center">
-<img alt="Arduino Uno" class="w-full h-full object-contain" src="/assets/arduino_board.png">
+<img alt="Arduino Uno" class="w-full h-full object-contain" src="/assets/hero_image.svg">
 <!-- Soft Red Glow Overlay -->
 <div class="absolute w-4 h-3 bg-error rounded-t-full rounded-b-sm opacity-90" style="top: 6%; left: 44.5%; animation: led-pulse 2s ease-in-out infinite; box-shadow: 0 0 20px 5px #ba1a1a;"></div>
 </div>
@@ -749,4 +749,3 @@ export default function Home() {
 
   return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
 }
-   
