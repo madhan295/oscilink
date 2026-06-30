@@ -24,6 +24,7 @@ A strictly typed foundation mapping the physical characteristics of microcontrol
 ### 4. Layout & UI Structure
 - A responsive, non-scrolling, three-panel Flexbox layout tailored for complex IDEs.
 - Custom dark-theme Tailwind configuration styled perfectly for deep focus.
+- **My Projects Panel**: A beautifully redesigned light theme panel with a custom confirm modal for robust project management.
 
 ### 5. Component Factory System
 A highly rigid factory architecture (`componentFactory.ts`) ensuring flawless initialization of physical circuit components onto the canvas:
@@ -38,6 +39,7 @@ A highly rigid factory architecture (`componentFactory.ts`) ensuring flawless in
   - `LED`: Interpolates physical brightness based on the engine's `simulationStore` state. Emits a realistic glow effect when powered.
   - `Resistor`: Procedurally generated color bands calculated dynamically based on its `resistance` property.
   - `PushButton`: Fully interactive with visual pressing animations, triggering immediate events to the simulation core.
+  - `Servo`: Continuous rotation servo support with a toggle switch directly in the properties panel.
   - `TemperatureSensor` (DHT11): Features a custom UI panel with sliders to dynamically adjust simulated temperature and humidity values.
   - `Cycle-Accurate Protocol Simulation`: The backend Web Worker natively simulates complex bit-banged 1-wire protocols (like the DHT11's 40-bit handshake) cycle-by-cycle directly into the `avr8js` CPU scheduler, allowing actual C++ sensor libraries to successfully communicate with simulated components.
 
@@ -51,7 +53,18 @@ A strictly ordered Konva rendering stack to guarantee 60fps performance during c
 - **`ComponentLayer`**: Routes and memoizes active circuit components. Directly subscribes to `simulationStore` via Zustand to trigger pinpoint `layer.batchDraw()` updates, completely bypassing standard React render loops for raw speed.
 - **`InteractionLayer`**: A top-level layer responsible for global interactions, such as rubber-band selection logic across the canvas and drawing global bounding boxes, ensuring component definitions remain clean and free of excessive logic.
 
+### 8. Modern Landing Page
+- **Next.js App**: A highly optimized, SEO-friendly landing page built with Next.js 14 and React 18.
+- **Framer Motion**: Smooth scroll-based animations for an engaging presentation.
+- **Tailwind CSS**: Beautifully crafted custom sections, typography, and marketing copy.
+
 ## Tech Stack
+### Landing Page (`packages/landing`)
+- Next.js 14 (App Router)
+- React 18
+- Tailwind CSS v3
+- Framer Motion
+
 ### Frontend (`packages/frontend`)
 - React 18 & Vite
 - TypeScript
@@ -75,9 +88,10 @@ A strictly ordered Konva rendering stack to guarantee 60fps performance during c
    ```
 
 2. **Start Development Servers:**
-   The root package.json utilizes parallel execution to run both frontend and backend concurrently.
+   The root package.json utilizes parallel execution to run the frontend, backend, and landing page concurrently.
    ```bash
    pnpm run dev
    ```
-   - **Frontend App**: [http://localhost:5173/](http://localhost:5173/)
+   - **Landing Page** (Next.js): [http://localhost:3000/](http://localhost:3000/)
+   - **Frontend App** (Vite): [http://localhost:5173/](http://localhost:5173/)
    - **Backend API**: [http://localhost:3001/](http://localhost:3001/)
