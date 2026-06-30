@@ -57,8 +57,8 @@ export function TemplatesSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
           {templates.map((template, idx) => (
             <div key={idx} className="bg-surface-bright p-6 rounded-lg border border-outline-variant/20 soft-shadow flex flex-col hover:border-primary/40 transition-all group">
-              <div className="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden relative flex items-center justify-center">
-                <Image src={template.image} alt={template.title} fill className="object-contain p-4" />
+              <div className="aspect-video rounded mb-4 overflow-hidden relative flex items-center justify-center">
+                <Image src={template.image} alt={template.title} fill className="object-contain" />
               </div>
               <h3 className="font-headline-md text-lg text-on-surface mb-2">{template.title}</h3>
               <p className="font-body-base text-sm text-on-surface-variant leading-relaxed mb-6 flex-1">{template.desc}</p>
