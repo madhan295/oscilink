@@ -438,8 +438,8 @@ export default function Home() {
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
 <!-- Card 1 -->
 <div class="bg-surface-bright p-6 rounded-lg border border-outline-variant/20 soft-shadow flex flex-col hover:border-primary/40 transition-all group">
-<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center">
-<span class="material-symbols-outlined text-on-surface-variant/30 text-4xl">developer_board</span>
+<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center relative">
+<img src="/assets/led_blinking.svg" alt="LED Blink" class="object-contain p-4 w-full h-full" />
 </div>
 <h3 class="font-headline-md text-lg text-on-surface mb-2">LED Blink</h3>
 <p class="font-body-base text-sm text-on-surface-variant leading-relaxed mb-6 flex-1">The classic "Hello World" of electronics. Start here.</p>
@@ -450,8 +450,8 @@ export default function Home() {
 </div>
 <!-- Card 2 -->
 <div class="bg-surface-bright p-6 rounded-lg border border-outline-variant/20 soft-shadow flex flex-col hover:border-primary/40 transition-all group">
-<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center">
-<span class="material-symbols-outlined text-on-surface-variant/30 text-4xl">traffic</span>
+<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center relative">
+<img src="/assets/traffic_light_controller.svg" alt="Traffic Light Controller" class="object-contain p-4 w-full h-full" />
 </div>
 <h3 class="font-headline-md text-lg text-on-surface mb-2">Traffic Light Controller</h3>
 <p class="font-body-base text-sm text-on-surface-variant leading-relaxed mb-6 flex-1">Manage complex timing sequences with multiple outputs.</p>
@@ -462,8 +462,8 @@ export default function Home() {
 </div>
 <!-- Card 3 -->
 <div class="bg-surface-bright p-6 rounded-lg border border-outline-variant/20 soft-shadow flex flex-col hover:border-primary/40 transition-all group">
-<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center">
-<span class="material-symbols-outlined text-on-surface-variant/30 text-4xl">settings_motion</span>
+<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center relative">
+<img src="/assets/servo_sweep.svg" alt="Servo Sweep" class="object-contain p-4 w-full h-full" />
 </div>
 <h3 class="font-headline-md text-lg text-on-surface mb-2">Servo Sweep</h3>
 <p class="font-body-base text-sm text-on-surface-variant leading-relaxed mb-6 flex-1">Precise motor control and positioning using PWM signals.</p>
@@ -474,8 +474,8 @@ export default function Home() {
 </div>
 <!-- Card 4 -->
 <div class="bg-surface-bright p-6 rounded-lg border border-outline-variant/20 soft-shadow flex flex-col hover:border-primary/40 transition-all group">
-<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center">
-<span class="material-symbols-outlined text-on-surface-variant/30 text-4xl">sensors</span>
+<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center relative">
+<img src="/assets/ultrasonic_distance_meter.svg" alt="Ultrasonic Distance Meter" class="object-contain p-4 w-full h-full" />
 </div>
 <h3 class="font-headline-md text-lg text-on-surface mb-2">Ultrasonic Distance Meter</h3>
 <p class="font-body-base text-sm text-on-surface-variant leading-relaxed mb-6 flex-1">Measure space with sound and LCD feedback.</p>
@@ -486,8 +486,8 @@ export default function Home() {
 </div>
 <!-- Card 5 -->
 <div class="bg-surface-bright p-6 rounded-lg border border-outline-variant/20 soft-shadow flex flex-col hover:border-primary/40 transition-all group">
-<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center">
-<span class="material-symbols-outlined text-on-surface-variant/30 text-4xl">thermostat</span>
+<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center relative">
+<img src="/assets/temperature_monitor.svg" alt="Temperature Monitor" class="object-contain p-4 w-full h-full" />
 </div>
 <h3 class="font-headline-md text-lg text-on-surface mb-2">Temperature Monitor</h3>
 <p class="font-body-base text-sm text-on-surface-variant leading-relaxed mb-6 flex-1">Real-time environment sensing with DHT11 sensors.</p>
@@ -498,8 +498,8 @@ export default function Home() {
 </div>
 <!-- Card 6 -->
 <div class="bg-surface-bright p-6 rounded-lg border border-outline-variant/20 soft-shadow flex flex-col hover:border-primary/40 transition-all group">
-<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center">
-<span class="material-symbols-outlined text-on-surface-variant/30 text-4xl">counter_7</span>
+<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center relative">
+<img src="/assets/seven_segment_digit_count.svg" alt="7-Segment Digit Counter" class="object-contain p-4 w-full h-full" />
 </div>
 <h3 class="font-headline-md text-lg text-on-surface mb-2">7-Segment Digit Counter</h3>
 <p class="font-body-base text-sm text-on-surface-variant leading-relaxed mb-6 flex-1">Master digital displays and logic multiplexing.</p>
@@ -510,8 +510,8 @@ export default function Home() {
 </div>
 <!-- Card 7 -->
 <div class="bg-surface-bright p-6 rounded-lg border border-outline-variant/20 soft-shadow flex flex-col hover:border-primary/40 transition-all group">
-<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center">
-<span class="material-symbols-outlined text-on-surface-variant/30 text-4xl">radio_button_checked</span>
+<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center relative">
+<img src="/assets/button_debounce_demo.svg" alt="Button Debounce Demo" class="object-contain p-4 w-full h-full" />
 </div>
 <h3 class="font-headline-md text-lg text-on-surface mb-2">Button Debounce Demo</h3>
 <p class="font-body-base text-sm text-on-surface-variant leading-relaxed mb-6 flex-1">Learn reliable input handling for physical buttons.</p>
@@ -522,8 +522,8 @@ export default function Home() {
 </div>
 <!-- Card 8 -->
 <div class="bg-surface-bright p-6 rounded-lg border border-outline-variant/20 soft-shadow flex flex-col hover:border-primary/40 transition-all group">
-<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center">
-<span class="material-symbols-outlined text-on-surface-variant/30 text-4xl">light_mode</span>
+<div class="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center relative">
+<img src="/assets/pwm_led_brightness.svg" alt="PWM LED Brightness" class="object-contain p-4 w-full h-full" />
 </div>
 <h3 class="font-headline-md text-lg text-on-surface mb-2">PWM LED Brightness</h3>
 <p class="font-body-base text-sm text-on-surface-variant leading-relaxed mb-6 flex-1">Smooth analog-style output using pulse width modulation.</p>

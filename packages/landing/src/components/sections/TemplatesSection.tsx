@@ -1,44 +1,45 @@
 'use client';
+import Image from 'next/image';
 
 export function TemplatesSection() {
   const templates = [
     {
-      icon: 'developer_board',
+      image: '/assets/led_blinking.svg',
       title: 'LED Blink',
       desc: 'The classic "Hello World" of electronics. Start here.'
     },
     {
-      icon: 'traffic',
+      image: '/assets/traffic_light_controller.svg',
       title: 'Traffic Light Controller',
       desc: 'Manage complex timing sequences with multiple outputs.'
     },
     {
-      icon: 'settings_motion',
+      image: '/assets/servo_sweep.svg',
       title: 'Servo Sweep',
       desc: 'Precise motor control and positioning using PWM signals.'
     },
     {
-      icon: 'sensors',
+      image: '/assets/ultrasonic_distance_meter.svg',
       title: 'Ultrasonic Distance Meter',
       desc: 'Measure space with sound and LCD feedback.'
     },
     {
-      icon: 'thermostat',
+      image: '/assets/temperature_monitor.svg',
       title: 'Temperature Monitor',
       desc: 'Real-time environment sensing with DHT11 sensors.'
     },
     {
-      icon: 'counter_7',
+      image: '/assets/seven_segment_digit_count.svg',
       title: '7-Segment Digit Counter',
       desc: 'Master digital displays and logic multiplexing.'
     },
     {
-      icon: 'radio_button_checked',
+      image: '/assets/button_debounce_demo.svg',
       title: 'Button Debounce Demo',
       desc: 'Learn reliable input handling for physical buttons.'
     },
     {
-      icon: 'light_mode',
+      image: '/assets/pwm_led_brightness.svg',
       title: 'PWM LED Brightness',
       desc: 'Smooth analog-style output using pulse width modulation.'
     }
@@ -56,8 +57,8 @@ export function TemplatesSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
           {templates.map((template, idx) => (
             <div key={idx} className="bg-surface-bright p-6 rounded-lg border border-outline-variant/20 soft-shadow flex flex-col hover:border-primary/40 transition-all group">
-              <div className="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden flex items-center justify-center">
-                <span className="material-symbols-outlined text-on-surface-variant/30 text-4xl">{template.icon}</span>
+              <div className="aspect-video bg-surface-container-low rounded mb-4 overflow-hidden relative flex items-center justify-center">
+                <Image src={template.image} alt={template.title} fill className="object-contain p-4" />
               </div>
               <h3 className="font-headline-md text-lg text-on-surface mb-2">{template.title}</h3>
               <p className="font-body-base text-sm text-on-surface-variant leading-relaxed mb-6 flex-1">{template.desc}</p>
