@@ -1,3 +1,4 @@
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 # Oscilink
 
 A full-stack monorepo for a browser-based Arduino electronics simulator. This project aims to provide a robust, interactive environment for designing circuits and writing code for Arduino microcontrollers directly in the browser.
