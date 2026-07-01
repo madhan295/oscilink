@@ -41,7 +41,7 @@ export default function Home() {
                     Open Simulator
                     <span class="material-symbols-outlined">arrow_forward</span>
 </button>
-<button class="bg-surface-container border border-outline-variant text-primary font-bold px-8 py-4 rounded-lg flex items-center gap-2 hover:bg-surface-container-high transition-all">
+<button onclick="document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });" class="bg-surface-container border border-outline-variant text-primary font-bold px-8 py-4 rounded-lg flex items-center gap-2 hover:bg-surface-container-high transition-all">
                     See How It Works
                     <span class="material-symbols-outlined text-xl">arrow_downward</span>
 </button>
@@ -136,7 +136,7 @@ export default function Home() {
 </div>
 </section>
 <!-- Section 02: Sound familiar? -->
-<section class="bg-surface-container-low py-24 border-y border-outline-variant/10">
+<section id="how-it-works" class="bg-surface-container-low py-24 border-y border-outline-variant/10">
 <div class="max-w-container-max mx-auto px-margin-desktop">
 <div class="text-center mb-16">
 <h2 class="font-display-lg text-display-lg-mobile md:text-headline-md text-on-surface mb-4 tracking-tight">Sound familiar?</h2>
