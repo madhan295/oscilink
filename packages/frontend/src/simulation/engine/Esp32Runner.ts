@@ -54,35 +54,86 @@ export function normalizeEsp32Pin(pin: any): string {
 export function transpileArduinoToJs(cppCode: string): string {
   let js = cppCode;
 
-  // 1. Protect string literals
+  // 1. Protect double-quoted string literals and char literals
   const strings: string[] = [];
   js = js.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (match) => {
     strings.push(match);
     return `__STR_${strings.length - 1}__`;
   });
 
-  // 2. Remove / comment out preprocessor directives
-  js = js.replace(/[ \t]*#\s*include\s*[<"][^>"]*[>"]/g, '// [include omitted]');
-  js = js.replace(/^[ \t]*#\s*define\s+(\w+)\s+(.+)$/gm, 'const $1 = $2;');
-  js = js.replace(/^[ \t]*#\s*define\s+(\w+)\s*$/gm, 'const $1 = true;');
-  js = js.replace(/^[ \t]*#\s*(ifdef|ifndef|endif|else|elif|pragma).*$/gm, '// [macro omitted]');
+  // Protect single character literals: 'a', '\n', etc.
+  js = js.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, (match) => {
+    strings.push(match);
+    return `__STR_${strings.length - 1}__`;
+  });
 
-  // 3. Convert class instantiations:
+  // 2. Strip C keywords that are irrelevant in JS runtime: PROGMEM, IRAM_ATTR, etc.
+  js = js.replace(/\b(PROGMEM|IRAM_ATTR|DRAM_ATTR)\b/g, '');
+
+  // 3. Strip C-style forward declarations / function prototypes:
+  // e.g. void setup(); void myFunc(int a, float b);
+  js = js.replace(/^[ \t]*(?:void|int|float|double|bool|boolean|char|uint\w+_t|unsigned\s+\w+)\s+\w+\s*\([^)]*\)\s*;/gm, '// [prototype omitted]');
+
+  // 4. Remove C++ preprocessor directives cleanly:
+  // Convert #define with parameters: #define MAX(a, b) ((a) > (b) ? (a) : (b))
+  js = js.replace(/^[ \t]*#\s*define\s+(\w+)\s*\(([^)]*)\)\s*(.+)$/gm, (_m, name, params, body) => {
+    return `const ${name} = (${params}) => (${body.replace(/\/\/.*$/, '').trim()});`;
+  });
+
+  // Convert simple #define NAME VALUE:
+  js = js.replace(/^[ \t]*#\s*define\s+(\w+)\s+([^/;\r\n]+)(.*)$/gm, (_m, name, val, comment) => {
+    return `const ${name} = ${val.trim()}; ${comment}`;
+  });
+
+  // Convert #define FLAG:
+  js = js.replace(/^[ \t]*#\s*define\s+(\w+)\s*$/gm, 'const $1 = true;');
+
+  // Comment out all remaining preprocessor lines starting with #:
+  // (#include, #if, #ifdef, #ifndef, #else, #elif, #endif, #pragma, #line, #error, etc.)
+  js = js.replace(/^[ \t]*#.*$/gm, '// [preprocessor omitted]');
+
+  // 5. Convert numeric suffixes: 1000UL, 1000L, 1000U, 1.5f, 2.0F (cause "Invalid or unexpected token" in JS)
+  js = js.replace(/(\b\d+(?:\.\d+)?)[uU]?[lL]{1,2}\b/g, '$1');
+  js = js.replace(/(\b\d+(?:\.\d+)?)[uU]\b/g, '$1');
+  js = js.replace(/(\b\d+\.\d+)[fF]\b/g, '$1');
+  js = js.replace(/(\b\d+)[fF]\b/g, '$1.0');
+
+  // 6. Convert class instantiations:
   js = js.replace(/\b(LiquidCrystal_I2C|LiquidCrystal|DHT)\s+(\w+)\s*\(([^;]*)\);/g, 'let $2 = new $1($3);');
   js = js.replace(/\b(Servo|ESP32Servo)\s+(\w+)\s*;/g, 'let $2 = new Servo();');
   js = js.replace(/\b(Servo|ESP32Servo)\s+(\w+)\s*\(([^;]*)\);/g, 'let $2 = new Servo($3);');
 
-  // 4. Convert variable declarations:
+  // 7. Types list
   const types = [
     'unsigned\\s+long', 'long', 'unsigned\\s+int', 'int', 'float', 'double',
-    'char', 'bool', 'boolean', 'byte', 'uint8_t', 'uint16_t', 'uint32_t',
-    'int8_t', 'int16_t', 'int32_t', 'size_t', 'short', 'unsigned\\s+short', 'String'
+    'char', 'bool', 'boolean', 'byte', 'uint8_t', 'uint16_t', 'uint32_t', 'uint64_t',
+    'int8_t', 'int16_t', 'int32_t', 'int64_t', 'size_t', 'short', 'unsigned\\s+short', 'String'
   ];
   const typePattern = types.join('|');
 
-  // Replace const declarations first: const int x = 1; -> const x = 1;
+  // Strip C-style casts: (int)x, (float)val, (unsigned long)t
+  const castRegex = new RegExp(`\\(\\s*(?:${typePattern})\\s*\\)`, 'g');
+  js = js.replace(castRegex, '');
+
+  // Convert array definitions with initializer:
+  // int arr[] = { 1, 2, 3 }; -> let arr = [ 1, 2, 3 ];
+  // const int arr[5] = { 1, 2 }; -> const arr = [ 1, 2 ];
+  js = js.replace(new RegExp(`\\b(?:const\\s+)?(?:${typePattern})\\s+(\\w+)\\s*\\[[^\\]]*\\]\\s*=\\s*\\{([^}]*)\\};`, 'g'), 'let $1 = [$2];');
+  js = js.replace(new RegExp(`\\b(?:const\\s+)?(?:${typePattern})\\s+(\\w+)\\s*\\[[^\\]]*\\]\\s*=\\s*`, 'g'), 'let $1 = ');
+
+  // Convert empty array definitions: char buf[64]; -> let buf = [];
+  js = js.replace(new RegExp(`\\b(?:const\\s+)?(?:${typePattern})\\s+(\\w+)\\s*\\[([^\\]]*)\\]\\s*;`, 'g'), 'let $1 = new Array($2 || 0);');
+
+  // Handle pointers: const char* s = ... -> const s = ...
+  // int* p = ... -> let p = ...
+  const constPtrRegex = new RegExp(`\\bconst\\s+(?:${typePattern})\\s*\\*+\\s*`, 'g');
+  js = js.replace(constPtrRegex, 'const ');
+
   const constVarRegex = new RegExp(`\\bconst\\s+(?:${typePattern})\\s+`, 'g');
   js = js.replace(constVarRegex, 'const ');
+
+  const varPtrRegex = new RegExp(`\\b(?:${typePattern})\\s*\\*+\\s*`, 'g');
+  js = js.replace(varPtrRegex, 'let ');
 
   // Collect user function names to await them
   const userFuncs = new Set<string>();
@@ -108,23 +159,26 @@ export function transpileArduinoToJs(cppCode: string): string {
   const varRegex = new RegExp(`\\b(?:${typePattern})\\s+`, 'g');
   js = js.replace(varRegex, 'let ');
 
-  // 5. Transform delay & delayMicroseconds & yield to await
+  // 8. Transform delay & delayMicroseconds & yield to await
   js = js.replace(/(?<!await\s+)\bdelay\s*\(/g, 'await delay(');
   js = js.replace(/(?<!await\s+)\bdelayMicroseconds\s*\(/g, 'await delayMicroseconds(');
   js = js.replace(/(?<!await\s+)\byield\s*\(/g, 'await yield(');
 
-  // 6. Transform calls to user-defined async functions
+  // 9. Transform calls to user-defined async functions
   for (const funcName of userFuncs) {
     if (funcName === 'setup' || funcName === 'loop') continue;
     const callRegex = new RegExp(`(?<!(?:async\\s+|function\\s+|\\.|await\\s+))\\b${funcName}\\s*\\(`, 'g');
     js = js.replace(callRegex, `await ${funcName}(`);
   }
 
-  // 7. Inject cancellation / cooperative yield inside loops
+  // 10. Inject cancellation / cooperative yield inside loops
   js = js.replace(/\bwhile\s*\(([^)]+)\)\s*\{/g, 'while ($1) { await __yieldCheck(); ');
   js = js.replace(/\bfor\s*\(([^)]+)\)\s*\{/g, 'for ($1) { await __yieldCheck(); ');
 
-  // 8. Restore string literals
+  // 11. Replace NULL with null
+  js = js.replace(/\bNULL\b/g, 'null');
+
+  // 12. Restore string literals
   js = js.replace(/__STR_(\d+)__/g, (_, idx) => strings[parseInt(idx, 10)]);
 
   return js;
@@ -160,29 +214,30 @@ export class Esp32Runner {
     const env = this.createEnvironment();
 
     try {
-      const runnerFn = new Function(...Object.keys(env), `
-        return (async () => {
-          ${transpiledJs}
-          if (typeof setup === 'function') {
-            await setup();
-          }
-          while (!__checkStopped()) {
-            await __waitIfPaused();
-            if (typeof loop === 'function') {
-              await loop();
-            }
-            await yield();
-          }
-        })();
-      `);
+      const fnBody = [
+        'return (async () => {',
+        transpiledJs,
+        "if (typeof setup === 'function') {",
+        '  await setup();',
+        '}',
+        'while (!__checkStopped()) {',
+        '  await __waitIfPaused();',
+        "  if (typeof loop === 'function') {",
+        '    await loop();',
+        '  }',
+        '  await yield();',
+        '}',
+        '})();'
+      ].join('\n');
 
+      const runnerFn = new Function(...Object.keys(env), fnBody);
       this.executionPromise = runnerFn(...Object.values(env));
       await this.executionPromise;
     } catch (err: any) {
       if (err && err.message === 'SIM_STOPPED') {
         // Normal stop, ignore
       } else {
-        console.error('ESP32 Execution Error:', err);
+        console.error('ESP32 Execution Error:', err, '\nTranspiled code:\n', transpiledJs);
         this.callbacks.onSerialOutput(`\n[ESP32 Runtime Error] ${err?.message || String(err)}\n`);
       }
     } finally {
@@ -532,7 +587,16 @@ export class Esp32Runner {
       ESP32Servo: SimServo,
       LiquidCrystal_I2C: SimLiquidCrystal_I2C,
       LiquidCrystal: SimLiquidCrystal_I2C,
-      DHT: SimDHT
+      DHT: SimDHT,
+
+      // Global helpers & types
+      F: (val: any) => val,
+      String: (val: any) => (val === undefined ? '' : String(val)),
+      boolean: Boolean,
+      byte: (val: any) => (Number(val) || 0) & 0xFF,
+      word: (val: any) => (Number(val) || 0) & 0xFFFF,
+      NULL: null,
+      sizeof: (val: any) => (typeof val === 'string' || Array.isArray(val) ? val.length : 4)
     };
   }
 }
