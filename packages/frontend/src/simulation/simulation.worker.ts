@@ -1082,10 +1082,10 @@ function initializeSimulation(hex: string, graphData: any) {
     if (graphData) {
       circuitGraph.loadSerialized(graphData);
 
-      // Seed initial ground and power pins for any arduinos
+      // Seed initial ground and power pins for any arduinos or ESP32s
       for (const [nodeId, node] of circuitGraph.nodes.entries()) {
         const comp = circuitGraph.components.get(node.componentId);
-        if (comp && comp.type === 'ARDUINO_UNO') {
+        if (comp && (comp.type === 'ARDUINO_UNO' || comp.type === 'ESP32_DEVKIT')) {
           if (node.pinType === 'power') {
             const v = nodeId.includes('3V3') ? 3.3 : 5.0;
             const updated = circuitGraph.propagateVoltage(nodeId, v);

@@ -6,6 +6,7 @@ import { useSimulationStore } from '../../store/simulationStore';
 import { CircuitComponent } from '../../types/components';
 
 import { ArduinoUno } from '../circuit-components/arduino/ArduinoUno';
+import { Esp32DevKit } from '../circuit-components/esp32/Esp32DevKit';
 import { LED } from '../circuit-components/passive/LED';
 import { Resistor } from '../circuit-components/passive/Resistor';
 import { PushButton } from '../circuit-components/passive/PushButton';
@@ -39,6 +40,7 @@ const FallbackComponent = ({ component }: { component: CircuitComponent }) => (
 export const ComponentRouter = memo(({ component }: { component: CircuitComponent }) => {
   switch (component.type) {
     case 'ARDUINO_UNO': return <ArduinoUno component={component} />;
+    case 'ESP32_DEVKIT': return <Esp32DevKit component={component} />;
     case 'LED': return <LED component={component} />;
     case 'RESISTOR': return <Resistor component={component} />;
     case 'PUSH_BUTTON': return <PushButton component={component} />;
@@ -104,9 +106,11 @@ export const ComponentLayer: React.FC<{ dimensions: { width: number, height: num
       // Breadboards at the very bottom
       if (a.type === 'BREADBOARD' && b.type !== 'BREADBOARD') return -1;
       if (a.type !== 'BREADBOARD' && b.type === 'BREADBOARD') return 1;
-      // Arduinos right above breadboards
-      if (a.type === 'ARDUINO_UNO' && b.type !== 'ARDUINO_UNO') return -1;
-      if (a.type !== 'ARDUINO_UNO' && b.type === 'ARDUINO_UNO') return 1;
+      // Microcontrollers (Arduino, ESP32) right above breadboards
+      const isMcuA = a.type === 'ARDUINO_UNO' || a.type === 'ESP32_DEVKIT';
+      const isMcuB = b.type === 'ARDUINO_UNO' || b.type === 'ESP32_DEVKIT';
+      if (isMcuA && !isMcuB) return -1;
+      if (!isMcuA && isMcuB) return 1;
       return 0;
     });
   }, [components]);

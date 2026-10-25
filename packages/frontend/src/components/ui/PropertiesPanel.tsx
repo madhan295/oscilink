@@ -537,6 +537,39 @@ const ComponentSpecificSection = ({
           </div>
         </div>
       )}
+
+      {type === 'ESP32_DEVKIT' && (
+        <div className="bg-[#F3F4F3] border border-[#E5EBE8] rounded-lg p-3 text-sm space-y-2">
+          <div className="flex justify-between">
+            <span className="text-[#6A7B76] font-medium">MCU Module</span>
+            <span className="text-[#2C5E4A] font-bold">ESP-WROOM-32</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#6A7B76] font-medium">Architecture</span>
+            <span className="text-[#2C5E4A] font-bold">Xtensa® Dual-Core LX6</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#6A7B76] font-medium">Clock Speed</span>
+            <span className="text-[#2C5E4A] font-bold">240 MHz</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#6A7B76] font-medium">Flash Memory</span>
+            <span className="text-[#2C5E4A] font-bold">4 MB SPI Flash</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#6A7B76] font-medium">SRAM / ROM</span>
+            <span className="text-[#2C5E4A] font-bold">520 KB / 448 KB</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#6A7B76] font-medium">Wireless</span>
+            <span className="text-[#2C5E4A] font-bold">Wi-Fi 802.11 b/g/n + BT 4.2</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#6A7B76] font-medium">GPIO Headers</span>
+            <span className="text-[#2C5E4A] font-bold">38-Pin Dual In-line</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -663,7 +696,7 @@ const LiveSimulationSection = ({ component, compState, pinVoltages }: { componen
         </div>
       )}
 
-      {type === 'ARDUINO_UNO' && (
+      {(type === 'ARDUINO_UNO' || type === 'ESP32_DEVKIT') && (
         <div className="space-y-2 text-sm bg-[#F3F4F3] border border-[#E5EBE8] p-2 rounded-lg max-h-48 overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-2 gap-2">
              {Object.entries(component.pins).map(([pinId, pin]) => {

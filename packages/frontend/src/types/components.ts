@@ -2,6 +2,7 @@ export type PinType = 'digital' | 'analog' | 'power' | 'ground' | 'PWM' | 'I2C_S
 export type PinDirection = 'input' | 'output' | 'bidirectional';
 export type ComponentType =
   | 'ARDUINO_UNO'
+  | 'ESP32_DEVKIT'
   | 'LED'
   | 'RESISTOR'
   | 'PUSH_BUTTON'

@@ -53,7 +53,7 @@ export function detectShortCircuit(_components: CircuitComponent[], _wires: Wire
       }
 
       // Add other pins of the SAME component (internal paths), except complex ones
-      if (comp && comp.pins && !['ARDUINO_UNO', 'PUSH_BUTTON', 'SWITCH', 'LED', 'ULTRASONIC_SENSOR', 'RELAY', 'LCD_16X2_I2C', 'LCD_16X2', 'BREADBOARD'].includes(comp.type)) {
+      if (comp && comp.pins && !['ARDUINO_UNO', 'ESP32_DEVKIT', 'PUSH_BUTTON', 'SWITCH', 'LED', 'ULTRASONIC_SENSOR', 'RELAY', 'LCD_16X2_I2C', 'LCD_16X2', 'BREADBOARD'].includes(comp.type)) {
         for (const pin of comp.pins) {
           if (pin.id !== node.pinId) {
             const internalNeighborId = `${comp.id}.${pin.id}`;
@@ -121,7 +121,7 @@ export function detectMissingGround(components: CircuitComponent[], _wires: Wire
   const errors: CircuitError[] = [];
   
   components.forEach(comp => {
-    if (comp.type === 'ARDUINO_UNO' || comp.type === 'RESISTOR') return;
+    if (comp.type === 'ARDUINO_UNO' || comp.type === 'ESP32_DEVKIT' || comp.type === 'RESISTOR') return;
     
     Object.values(comp.pins).forEach(pin => {
       if (pin.type === 'ground' || pin.id === 'CATHODE' || pin.id === 'GND' || pin.id === '-') {
@@ -132,7 +132,7 @@ export function detectMissingGround(components: CircuitComponent[], _wires: Wire
             severity: 'warning',
             message: `${comp.type} component is missing a ground connection.`,
             affectedComponentIds: [comp.id],
-            hint: `Connect the ${pin.label || pin.id} pin to a GND pin on the Arduino.`
+            hint: `Connect the ${pin.label || pin.id} pin to a GND pin on the Arduino or ESP32.`
           });
         }
       }
@@ -146,7 +146,7 @@ export function detectUnconnectedPowerPin(components: CircuitComponent[], _wires
   const errors: CircuitError[] = [];
   
   components.forEach(comp => {
-    if (comp.type === 'ARDUINO_UNO') return;
+    if (comp.type === 'ARDUINO_UNO' || comp.type === 'ESP32_DEVKIT') return;
     
     Object.values(comp.pins).forEach(pin => {
       if (pin.type === 'power' || pin.id === 'VCC' || pin.id === '+' || pin.id === '5V') {

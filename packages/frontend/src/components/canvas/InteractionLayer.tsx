@@ -14,6 +14,9 @@ export const getComponentBounds = (comp: CircuitComponent) => {
     case 'ARDUINO_UNO':
       width = 208; height = 148; offsetX = -4; offsetY = -4;
       break;
+    case 'ESP32_DEVKIT':
+      width = 156; height = 280; offsetX = -4; offsetY = -4;
+      break;
     case 'LED':
       width = 50; height = 55; offsetX = -5; offsetY = -5;
       break;

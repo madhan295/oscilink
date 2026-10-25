@@ -23,7 +23,8 @@ const CATEGORIES: CategoryDef[] = [
   {
     name: 'Microcontrollers',
     components: [
-      { type: 'ARDUINO_UNO', name: 'Arduino Uno', description: 'ATmega328P based microcontroller board' }
+      { type: 'ARDUINO_UNO', name: 'Arduino Uno', description: 'ATmega328P based microcontroller board' },
+      { type: 'ESP32_DEVKIT', name: 'ESP32 DevKit v1', description: 'Dual-Core 240MHz 38-Pin NodeMCU-32S' }
     ]
   },
   {
@@ -246,6 +247,8 @@ export const ComponentPalette: React.FC = () => {
                           <h3 className="text-[13px] font-semibold text-[#2C5E4A] truncate group-hover:text-[#1a382c] transition-colors">{comp.name}</h3>
                           {comp.type === 'ARDUINO_UNO' ? (
                             <p className="text-[9px] text-[#2C5E4A]/60 truncate mt-0.5">ATmega328P based</p>
+                          ) : comp.type === 'ESP32_DEVKIT' ? (
+                            <p className="text-[9px] text-[#2C5E4A]/60 truncate mt-0.5">Xtensa Dual-Core 240MHz</p>
                           ) : (
                             <p className="text-[9px] text-[#2C5E4A]/60 truncate mt-0.5">{comp.description}</p>
                           )}

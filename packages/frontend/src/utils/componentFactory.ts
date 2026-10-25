@@ -121,6 +121,93 @@ export function createComponent(type: ComponentType, position: Point, initialPro
       break;
     }
 
+    case 'ESP32_DEVKIT': {
+      const sx = 148 / 405;
+      const sy = 270 / 742;
+      const leftX = 28 * sx;
+      const rightX = 377 * sx;
+      const startY = 75 * sy;
+      const pinPitchY = 33 * sy;
+
+      const createPinVoltage = (pinId: string, label: string, pType: PinType, direction: PinDirection, pos: Point, voltage = 0): Pin => ({
+        id: pinId,
+        label,
+        type: pType,
+        direction,
+        position: pos,
+        connectedWireIds: [],
+        voltage
+      });
+
+      const leftPins = [
+        { id: '3V3', label: '3V3', type: 'power', dir: 'output', v: 3.3 },
+        { id: 'EN', label: 'EN', type: 'digital', dir: 'input', v: 3.3 },
+        { id: 'VP', label: 'VP', type: 'analog', dir: 'input' },
+        { id: 'VN', label: 'VN', type: 'analog', dir: 'input' },
+        { id: 'D34', label: '34', type: 'analog', dir: 'input' },
+        { id: 'D35', label: '35', type: 'analog', dir: 'input' },
+        { id: 'D32', label: '32', type: 'PWM', dir: 'bidirectional' },
+        { id: 'D33', label: '33', type: 'PWM', dir: 'bidirectional' },
+        { id: 'D25', label: '25', type: 'analog', dir: 'bidirectional' },
+        { id: 'D26', label: '26', type: 'analog', dir: 'bidirectional' },
+        { id: 'D27', label: '27', type: 'PWM', dir: 'bidirectional' },
+        { id: 'D14', label: '14', type: 'PWM', dir: 'bidirectional' },
+        { id: 'D12', label: '12', type: 'PWM', dir: 'bidirectional' },
+        { id: 'GND_L', label: 'GND', type: 'ground', dir: 'output', v: 0 },
+        { id: 'D13', label: '13', type: 'PWM', dir: 'bidirectional' },
+        { id: 'SD2', label: 'SD2', type: 'digital', dir: 'bidirectional' },
+        { id: 'SD3', label: 'SD3', type: 'digital', dir: 'bidirectional' },
+        { id: 'CMD', label: 'CMD', type: 'digital', dir: 'bidirectional' },
+        { id: '5V', label: '5V', type: 'power', dir: 'output', v: 5.0 }
+      ];
+
+      leftPins.forEach((p, i) => {
+        pins[p.id] = createPinVoltage(p.id, p.label, p.type as PinType, p.dir as PinDirection, {
+          x: leftX,
+          y: startY + i * pinPitchY
+        }, p.v || 0);
+      });
+
+      const rightPins = [
+        { id: 'GND_R1', label: 'GND', type: 'ground', dir: 'output', v: 0 },
+        { id: 'D23', label: '23', type: 'PWM', dir: 'bidirectional' },
+        { id: 'D22', label: '22', type: 'I2C_SCL', dir: 'bidirectional' },
+        { id: 'TX0', label: 'TXD', type: 'digital', dir: 'bidirectional' },
+        { id: 'RX0', label: 'RXD', type: 'digital', dir: 'bidirectional' },
+        { id: 'D21', label: '21', type: 'I2C_SDA', dir: 'bidirectional' },
+        { id: 'GND_R2', label: 'GND', type: 'ground', dir: 'output', v: 0 },
+        { id: 'D19', label: '19', type: 'PWM', dir: 'bidirectional' },
+        { id: 'D18', label: '18', type: 'PWM', dir: 'bidirectional' },
+        { id: 'D5', label: '5', type: 'PWM', dir: 'bidirectional' },
+        { id: 'TX2', label: '17', type: 'digital', dir: 'bidirectional' },
+        { id: 'RX2', label: '16', type: 'digital', dir: 'bidirectional' },
+        { id: 'D4', label: '4', type: 'PWM', dir: 'bidirectional' },
+        { id: 'CLK', label: '0', type: 'digital', dir: 'bidirectional', v: 3.3 },
+        { id: 'D2', label: '2', type: 'PWM', dir: 'bidirectional' },
+        { id: 'D15', label: '15', type: 'PWM', dir: 'bidirectional' },
+        { id: 'SD1', label: 'SD1', type: 'digital', dir: 'bidirectional' },
+        { id: 'SD0', label: 'SD0', type: 'digital', dir: 'bidirectional' },
+        { id: 'D6', label: 'CLK', type: 'digital', dir: 'bidirectional' }
+      ];
+
+      rightPins.forEach((p, i) => {
+        pins[p.id] = createPinVoltage(p.id, p.label, p.type as PinType, p.dir as PinDirection, {
+          x: rightX,
+          y: startY + i * pinPitchY
+        }, p.v || 0);
+      });
+
+      properties = {
+        frequency: '240MHz',
+        flashSize: '4MB',
+        sram: '520KB',
+        wifi: true,
+        bluetooth: true,
+        variant: 'ESP-32 (38-Pin DevKit)'
+      };
+      break;
+    }
+
     case 'LED': {
       pins['ANODE'] = createPin('ANODE', '+', 'digital', 'bidirectional', { x: 10, y: 40 });
       pins['CATHODE'] = createPin('CATHODE', '-', 'digital', 'bidirectional', { x: 30, y: 40 });

@@ -25,6 +25,7 @@ export const ComponentThumbnail: React.FC<ComponentThumbnailProps> = ({ type, si
   const { scale, offsetX, offsetY } = useMemo(() => {
     switch (type) {
       case 'ARDUINO_UNO': return { scale: size / 210, offsetX: -100, offsetY: -74 };
+      case 'ESP32_DEVKIT': return { scale: size / 280, offsetX: -74, offsetY: -135 };
       case 'BREADBOARD': return { scale: size / 330, offsetX: -165, offsetY: -90 };
       case 'LCD_16X2': return { scale: size / 176, offsetX: -76, offsetY: 36 };
       case 'LCD_16X2_I2C': return { scale: size / 176, offsetX: -76, offsetY: 36 };
