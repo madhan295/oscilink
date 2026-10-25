@@ -17,6 +17,8 @@ export const Esp32DevKit = memo(({ component }: Esp32DevKitProps) => {
   const pcbGroupRef = useRef<Konva.Group>(null);
 
   const pinRefs = useRef<Record<string, Konva.Circle>>({});
+  const pwrLedRef = useRef<Konva.Rect>(null);
+  const d2LedRef = useRef<Konva.Rect>(null);
 
   const { handlePinMouseDown, handlePinMouseEnter, handlePinMouseLeave } = React.useContext(CanvasContext);
 
@@ -32,7 +34,7 @@ export const Esp32DevKit = memo(({ component }: Esp32DevKitProps) => {
     };
   }, []);
 
-  // Subscribe to pin voltages to update pin contact glows
+  // Subscribe to pin voltages to update pin contact glows & onboard D2 LED
   useEffect(() => {
     const unsubscribe = useSimulationStore.subscribe(
       (state) => state.pinVoltages,
@@ -54,10 +56,37 @@ export const Esp32DevKit = memo(({ component }: Esp32DevKitProps) => {
             circle.shadowBlur(glowCol !== 'transparent' ? 3 : 0);
           }
         }
+
+        const isD2On = getV('D2') > 1.5;
+        if (d2LedRef.current) {
+          d2LedRef.current.fill(isD2On ? '#3b82f6' : '#1e293b');
+          d2LedRef.current.shadowColor(isD2On ? '#3b82f6' : 'transparent');
+          d2LedRef.current.shadowBlur(isD2On ? 8 : 0);
+        }
       }
     );
     return unsubscribe;
   }, [component.id, pinList]);
+
+  // Subscribe to simulation status for onboard PWR LED
+  useEffect(() => {
+    const unsubscribe = useSimulationStore.subscribe(
+      (state) => state.status,
+      (status) => {
+        const isRunning = status === 'RUNNING';
+        if (pwrLedRef.current) {
+          pwrLedRef.current.fill(isRunning ? '#ef4444' : '#450a0a');
+          pwrLedRef.current.shadowColor(isRunning ? '#ef4444' : 'transparent');
+          pwrLedRef.current.shadowBlur(isRunning ? 8 : 0);
+        }
+        if (!isRunning && d2LedRef.current) {
+          d2LedRef.current.fill('#1e293b');
+          d2LedRef.current.shadowBlur(0);
+        }
+      }
+    );
+    return unsubscribe;
+  }, []);
 
   const handleDragStart = useCallback(() => {
     useWorkspaceStore.getState().pushHistory();
@@ -445,6 +474,25 @@ export const Esp32DevKit = memo(({ component }: Esp32DevKitProps) => {
           <Text text="C106" x={-8} y={14} width={36} align="center" fontSize={7} fontFamily="monospace" fontStyle="bold" fill="#09090b" rotation={-90} />
         </Group>
 
+        {/* Onboard LEDs Base & Silkscreen (PWR and D2 / GPIO 2) */}
+        <Group x={112} y={476}>
+          {/* PWR LED Base */}
+          <Group x={0}>
+            <Rect width={15} height={22} fill="#18181b" stroke="#3f3f46" strokeWidth={0.8} cornerRadius={1.5} />
+            <Rect x={0} y={0} width={15} height={4} fill="#cbd5e1" />
+            <Rect x={0} y={18} width={15} height={4} fill="#cbd5e1" />
+            <Text text="PWR" x={-6} y={24} width={27} align="center" fontSize={7} fontFamily="monospace" fontStyle="bold" fill="#ffffff" />
+          </Group>
+
+          {/* D2 LED Base */}
+          <Group x={26}>
+            <Rect width={15} height={22} fill="#18181b" stroke="#3f3f46" strokeWidth={0.8} cornerRadius={1.5} />
+            <Rect x={0} y={0} width={15} height={4} fill="#cbd5e1" />
+            <Rect x={0} y={18} width={15} height={4} fill="#cbd5e1" />
+            <Text text="D2" x={-6} y={24} width={27} align="center" fontSize={7} fontFamily="monospace" fontStyle="bold" fill="#ffffff" />
+          </Group>
+        </Group>
+
         {/* Second Tantalum / Inductor Component */}
         <Group x={78} y={528}>
           <Rect width={20} height={36} fill="#ca8a04" stroke="#a16207" strokeWidth={1} cornerRadius={3} />
@@ -687,6 +735,30 @@ export const Esp32DevKit = memo(({ component }: Esp32DevKitProps) => {
             rotation={-90}
           />
         ))}
+      </Group>
+
+      {/* ── DYNAMIC ONBOARD LEDS (PWR & D2 - NOT CACHED) ── */}
+      <Group scaleX={sx} scaleY={sy} listening={false}>
+        {/* PWR LED Glow (Red) */}
+        <Rect
+          ref={pwrLedRef}
+          x={114}
+          y={481}
+          width={11}
+          height={12}
+          fill="#450a0a"
+          cornerRadius={1}
+        />
+        {/* D2 LED Glow (Blue - GPIO 2) */}
+        <Rect
+          ref={d2LedRef}
+          x={140}
+          y={481}
+          width={11}
+          height={12}
+          fill="#1e293b"
+          cornerRadius={1}
+        />
       </Group>
 
       {/* ── DYNAMIC PIN CONTACT GLOWS (NOT CACHED) ── */}

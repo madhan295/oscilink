@@ -26,7 +26,7 @@ router.post('/compile', compileLimiter, async (req: Request, res: Response) => {
   const ip = req.ip || req.socket.remoteAddress || 'unknown';
   
   try {
-    const { code } = req.body;
+    const { code, board } = req.body;
 
     // Request validation
     if (typeof code !== 'string') {
@@ -54,7 +54,7 @@ router.post('/compile', compileLimiter, async (req: Request, res: Response) => {
     }
 
     // Call the compiler service
-    const result = await compileSketch(code);
+    const result = await compileSketch(code, typeof board === 'string' ? board : 'arduino');
     
     const duration = Date.now() - startTime;
     const resultLog = result.success ? 'success' : `${result.errors?.length || 0} errors`;

@@ -5,8 +5,8 @@ export function useSimulation() {
   const status = useSimulationStore((state) => state.status);
   const errorMessage = useSimulationStore((state) => state.errorMessage);
 
-  const initialize = (hex: string, serializedGraph: any) => {
-    simulationManager.initialize(hex, serializedGraph);
+  const initialize = (hex: string, serializedGraph: any, code?: string) => {
+    simulationManager.initialize(hex, serializedGraph, code);
   };
 
   const start = () => {

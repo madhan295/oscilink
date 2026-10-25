@@ -48,12 +48,16 @@ export function useCompiler() {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 65000);
+      const timeoutId = setTimeout(() => controller.abort(), 95000);
+
+      const components = useWorkspaceStore.getState().components;
+      const hasEsp32 = components.some(c => c.type === 'ESP32_DEVKIT');
+      const board = hasEsp32 ? 'esp32' : 'arduino';
 
       const response = await fetch('http://localhost:3001/api/compile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, board }),
         signal: controller.signal
       });
 

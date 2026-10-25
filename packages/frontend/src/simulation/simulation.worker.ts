@@ -21,6 +21,7 @@ import {
 import { CircuitGraph, calculateLEDState, calculateBuzzerState, calculateServoState, calculateRelayState, calculateResistorState } from './engine/CircuitGraph';
 import { HD44780 } from './engine/HD44780';
 import { DIGIT_SEGMENTS } from '../utils/sevenSegmentLookup';
+import { Esp32Runner, normalizeEsp32Pin } from './engine/Esp32Runner';
 
 class I2CHandler implements TWIEventHandler {
   private activeAddress: number | null = null;
@@ -114,7 +115,26 @@ class AVRRunner {
 }
 
 let avrRunner: AVRRunner | null = null;
+let esp32Runner: Esp32Runner | null = null;
+let activeBoardType: 'ARDUINO_UNO' | 'ESP32_DEVKIT' = 'ARDUINO_UNO';
+let lastCode: string = '';
+let lastBoardType: string = '';
 let circuitGraph: CircuitGraph | null = null;
+
+function getMcuComponent(): { id: string; type: string } | null {
+  if (!circuitGraph) return null;
+  if (activeBoardType === 'ESP32_DEVKIT') {
+    for (const [id, comp] of circuitGraph.components.entries()) {
+      if (comp.type === 'ESP32_DEVKIT') return { id, type: comp.type };
+    }
+  }
+  for (const [id, comp] of circuitGraph.components.entries()) {
+    if (comp.type === 'ESP32_DEVKIT' || comp.type === 'ARDUINO_UNO') {
+      return { id, type: comp.type };
+    }
+  }
+  return null;
+}
 let simulationLoopTimer: NodeJS.Timeout | null = null;
 let isRunning = false;
 let serialBuffer = "";
@@ -223,6 +243,10 @@ function stopSimulation() {
   if (simulationLoopTimer) {
     clearTimeout(simulationLoopTimer);
     simulationLoopTimer = null;
+  }
+  if (esp32Runner) {
+    esp32Runner.stop();
+    esp32Runner = null;
   }
   avrRunner = null;
   circuitGraph = null;
@@ -730,70 +754,66 @@ function broadcastVoltageUpdates(updatedNodes: Map<string, number>) {
 
 function handlePinChange(pinName: string, voltage: number) {
   registerActivity();
-  // Always notify UI for Arduino visual pins
-  postMessage({ type: 'PIN_CHANGE', payload: { componentId: 'arduino-uno', pinId: pinName, voltage } });
+  const mcu = getMcuComponent();
+  const mcuId = mcu ? mcu.id : null;
+  const isEsp32 = (mcu && mcu.type === 'ESP32_DEVKIT') || activeBoardType === 'ESP32_DEVKIT';
+
+  if (isEsp32) {
+    pinName = normalizeEsp32Pin(pinName);
+  }
+
+  // Always notify UI for visual pins
+  if (mcuId) {
+    postMessage({ type: 'PIN_CHANGE', payload: { componentId: mcuId, pinId: pinName, voltage } });
+  }
+  postMessage({ type: 'PIN_CHANGE', payload: { componentId: isEsp32 ? 'esp32' : 'arduino-uno', pinId: pinName, voltage } });
 
   // ULTRASONIC SENSOR SIMULATION
   // When TRIG pin changes, simulate ECHO response
   if (circuitGraph && voltage === 0) {
-    // TRIG just went LOW - check if it was HIGH before (falling edge)
     const previousVoltage = trigState[pinName];
-    if (previousVoltage === true) {
-      // Find if this pin is connected to a TRIG pin of an ultrasonic sensor
-      let arduinoId = null;
-      for (const [id, comp] of circuitGraph.components.entries()) {
-        if (comp.type === 'ARDUINO_UNO') { arduinoId = id; break; }
-      }
+    if (previousVoltage === true && mcuId) {
+      const connectedComponents = circuitGraph.getConnectedComponents(mcuId, pinName);
       
-      if (arduinoId) {
-        const connectedComponents = circuitGraph.getConnectedComponents(arduinoId, pinName);
-        
-        for (const comp of connectedComponents) {
-          if (comp.type === 'ULTRASONIC_SENSOR') {
-            const durationUs = simulatedDistanceCm * 58;
-            
-            // Post event to UI
-            postMessage({
-              type: 'ULTRASONIC_ECHO',
-              payload: {
-                sensorId: comp.id,
-                durationUs: durationUs,
-                distanceCm: simulatedDistanceCm
-              }
-            });
+      for (const comp of connectedComponents) {
+        if (comp.type === 'ULTRASONIC_SENSOR') {
+          const durationUs = simulatedDistanceCm * 58;
+          
+          postMessage({
+            type: 'ULTRASONIC_ECHO',
+            payload: {
+              sensorId: comp.id,
+              durationUs: durationUs,
+              distanceCm: simulatedDistanceCm
+            }
+          });
 
-            // Hardware simulation: find ECHO pin and send pulse
-            if (avrRunner) {
-              let echoArduinoPin = null;
-              for (let bit = 0; bit <= 13; bit++) {
-                if (circuitGraph.findPath(`${comp.id}.ECHO`, `${arduinoId}.D${bit}`)) {
-                  echoArduinoPin = `D${bit}`; break;
+          if (avrRunner) {
+            let echoArduinoPin = null;
+            for (let bit = 0; bit <= 13; bit++) {
+              if (circuitGraph.findPath(`${comp.id}.ECHO`, `${mcuId}.D${bit}`)) {
+                echoArduinoPin = `D${bit}`; break;
+              }
+            }
+            if (!echoArduinoPin) {
+              for (let bit = 0; bit <= 5; bit++) {
+                if (circuitGraph.findPath(`${comp.id}.ECHO`, `${mcuId}.A${bit}`)) {
+                  echoArduinoPin = `A${bit}`; break;
                 }
               }
-              if (!echoArduinoPin) {
-                for (let bit = 0; bit <= 5; bit++) {
-                  if (circuitGraph.findPath(`${comp.id}.ECHO`, `${arduinoId}.A${bit}`)) {
-                    echoArduinoPin = `A${bit}`; break;
-                  }
-                }
-              }
+            }
 
-              if (echoArduinoPin) {
-                // Real HC-SR04 delays about 450us before ECHO goes HIGH
-                const startDelayUs = 450;
-                
-                const startCycle = avrRunner.cpu.cycles + (startDelayUs * 16);
-                const endCycle = startCycle + (durationUs * 16);
+            if (echoArduinoPin) {
+              const startDelayUs = 450;
+              const startCycle = avrRunner.cpu.cycles + (startDelayUs * 16);
+              const endCycle = startCycle + (durationUs * 16);
 
-                scheduledPinToggles.push({ cpuCycle: startCycle, pinName: echoArduinoPin, state: true });
-                scheduledPinToggles.push({ cpuCycle: endCycle, pinName: echoArduinoPin, state: false });
-                
-                nextToggleCycle = Math.min(nextToggleCycle, startCycle);
-                
-                postMessage({ type: 'SERIAL_OUTPUT', payload: { text: `[SIM] Found ECHO on ${echoArduinoPin}, pulse scheduled for ${durationUs}us\n` } });
-              } else {
-                postMessage({ type: 'SERIAL_OUTPUT', payload: { text: `[SIM] ERROR: ECHO pin wire not found in graph!\n` } });
-              }
+              scheduledPinToggles.push({ cpuCycle: startCycle, pinName: echoArduinoPin, state: true });
+              scheduledPinToggles.push({ cpuCycle: endCycle, pinName: echoArduinoPin, state: false });
+              
+              nextToggleCycle = Math.min(nextToggleCycle, startCycle);
+              
+              postMessage({ type: 'SERIAL_OUTPUT', payload: { text: `[SIM] Found ECHO on ${echoArduinoPin}, pulse scheduled for ${durationUs}us\n` } });
             }
           }
         }
@@ -801,11 +821,10 @@ function handlePinChange(pinName: string, voltage: number) {
     }
   }
   
-  // Track TRIG state
   trigState[pinName] = voltage > 2.5;
 
   // DHT11 SENSOR SIMULATION
-  if (circuitGraph) {
+  if (circuitGraph && mcuId) {
     if (voltage < 2.5) {
       if (!dhtLowCycle[pinName] && avrRunner) {
         dhtLowCycle[pinName] = avrRunner.cpu.cycles;
@@ -815,61 +834,48 @@ function handlePinChange(pinName: string, voltage: number) {
         const cyclesLow = avrRunner.cpu.cycles - dhtLowCycle[pinName];
         dhtLowCycle[pinName] = 0;
 
-        // MCU start signal is ~18ms (288,000 cycles at 16MHz). Check for > 10ms (160,000 cycles).
         if (cyclesLow > 160000) {
-          let arduinoId = null;
-          for (const [id, comp] of circuitGraph.components.entries()) {
-            if (comp.type === 'ARDUINO_UNO') { arduinoId = id; break; }
-          }
+          const connectedComponents = circuitGraph.getConnectedComponents(mcuId, pinName);
+          for (const comp of connectedComponents) {
+            if (comp.type === 'TEMPERATURE_SENSOR') {
+              const tempInt = Math.floor(simulatedTempCelsius);
+              const tempDec = Math.round((simulatedTempCelsius - tempInt) * 10);
+              const humInt = Math.floor(simulatedHumidity);
+              const humDec = Math.round((simulatedHumidity - humInt) * 10);
+              const checksum = (tempInt + tempDec + humInt + humDec) & 0xFF;
 
-          if (arduinoId) {
-            const connectedComponents = circuitGraph.getConnectedComponents(arduinoId, pinName);
-            for (const comp of connectedComponents) {
-              if (comp.type === 'TEMPERATURE_SENSOR') {
-                // Generate 40-bit DHT response
-                const tempInt = Math.floor(simulatedTempCelsius);
-                const tempDec = Math.round((simulatedTempCelsius - tempInt) * 10);
-                const humInt = Math.floor(simulatedHumidity);
-                const humDec = Math.round((simulatedHumidity - humInt) * 10);
-                const checksum = (tempInt + tempDec + humInt + humDec) & 0xFF;
-
-                const dataBits: boolean[] = [];
-                const pushByte = (b: number) => {
-                  for (let i = 7; i >= 0; i--) {
-                    dataBits.push(((b >> i) & 1) === 1);
-                  }
-                };
-                pushByte(humInt);
-                pushByte(humDec);
-                pushByte(tempInt);
-                pushByte(tempDec);
-                pushByte(checksum);
-
-                // Delay 40us before response
-                let currentCycle = avrRunner.cpu.cycles + 40 * 16;
-                
-                // DHT response 80us LOW, 80us HIGH
-                scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: false });
-                currentCycle += 80 * 16;
-                scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: true });
-                currentCycle += 80 * 16;
-
-                // 40 bits of data
-                for (const bit of dataBits) {
-                  scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: false });
-                  currentCycle += 50 * 16; // 50us LOW
-                  scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: true });
-                  currentCycle += (bit ? 70 : 28) * 16; // 70us HIGH for '1', 28us HIGH for '0'
+              const dataBits: boolean[] = [];
+              const pushByte = (b: number) => {
+                for (let i = 7; i >= 0; i--) {
+                  dataBits.push(((b >> i) & 1) === 1);
                 }
+              };
+              pushByte(humInt);
+              pushByte(humDec);
+              pushByte(tempInt);
+              pushByte(tempDec);
+              pushByte(checksum);
 
-                // End of transmission (50us LOW) then return to floating HIGH
+              let currentCycle = avrRunner.cpu.cycles + 40 * 16;
+              
+              scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: false });
+              currentCycle += 80 * 16;
+              scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: true });
+              currentCycle += 80 * 16;
+
+              for (const bit of dataBits) {
                 scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: false });
                 currentCycle += 50 * 16;
                 scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: true });
-
-                nextToggleCycle = Math.min(nextToggleCycle, avrRunner.cpu.cycles + 40 * 16);
-                postMessage({ type: 'SERIAL_OUTPUT', payload: { text: `[SIM] DHT11 responding on ${pinName}\n` } });
+                currentCycle += (bit ? 70 : 28) * 16;
               }
+
+              scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: false });
+              currentCycle += 50 * 16;
+              scheduledPinToggles.push({ cpuCycle: currentCycle, pinName, state: true });
+
+              nextToggleCycle = Math.min(nextToggleCycle, avrRunner.cpu.cycles + 40 * 16);
+              postMessage({ type: 'SERIAL_OUTPUT', payload: { text: `[SIM] DHT11 responding on ${pinName}\n` } });
             }
           }
         }
@@ -877,159 +883,136 @@ function handlePinChange(pinName: string, voltage: number) {
     }
   }
 
-  if (circuitGraph) {
-    // 1. Find the real Arduino ID in the graph
-    let arduinoId = null;
+  if (circuitGraph && mcuId) {
+    const nodeId = `${mcuId}.${pinName}`;
+    const updatedNodes = circuitGraph.propagateVoltage(nodeId, voltage);
+    broadcastVoltageUpdates(updatedNodes);
+
     for (const [id, comp] of circuitGraph.components.entries()) {
-      if (comp.type === 'ARDUINO_UNO') { arduinoId = id; break; }
+      if (comp.type === 'RELAY') {
+        const state = calculateRelayState(comp, circuitGraph);
+        queueComponentUpdate(id, state);
+        
+        const comNode = `${id}.COM`;
+        const noNode = `${id}.NO`;
+        const ncNode = `${id}.NC`;
+        
+        if (state.isActivated) {
+          circuitGraph.openSwitch(comNode, ncNode);
+          circuitGraph.closeSwitch(comNode, noNode);
+        } else {
+          circuitGraph.openSwitch(comNode, noNode);
+          circuitGraph.closeSwitch(comNode, ncNode);
+        }
+      } else if (comp.type === 'LED') {
+        const state = calculateLEDState(comp, circuitGraph);
+        queueComponentUpdate(id, state);
+      } else if (comp.type === 'RESISTOR') {
+        const state = calculateResistorState(comp, circuitGraph);
+        queueComponentUpdate(id, state);
+      } else if (comp.type === 'BUZZER') {
+        const state = calculateBuzzerState(comp, circuitGraph);
+        queueComponentUpdate(id, state);
+      } else if (comp.type === 'LCD_16X2') {
+        if (!lcdControllers[id]) {
+          lcdControllers[id] = new HD44780();
+        }
+        const rs = circuitGraph.getNodeVoltage(id, 'RS') > 2.5;
+        const rw = circuitGraph.getNodeVoltage(id, 'RW') > 2.5;
+        const e = circuitGraph.getNodeVoltage(id, 'E') > 2.5;
+        const d4 = circuitGraph.getNodeVoltage(id, 'D4') > 2.5 ? 1 : 0;
+        const d5 = circuitGraph.getNodeVoltage(id, 'D5') > 2.5 ? 1 : 0;
+        const d6 = circuitGraph.getNodeVoltage(id, 'D6') > 2.5 ? 1 : 0;
+        const d7 = circuitGraph.getNodeVoltage(id, 'D7') > 2.5 ? 1 : 0;
+        const a = circuitGraph.getNodeVoltage(id, 'A') > 2.5;
+
+        const dataNibble = (d7 << 3) | (d6 << 2) | (d5 << 1) | d4;
+        const lcd = lcdControllers[id];
+        const oldLastEnable = lcd.lastEnable;
+        
+        lcd.processPins(rs, rw, e, dataNibble, a);
+        
+        if (oldLastEnable !== lcd.lastEnable) {
+          queueComponentUpdate(id, { 
+            rows: lcd.rows, 
+            cursorRow: lcd.cursorRow, 
+            cursorCol: lcd.cursorCol,
+            backlight: lcd.backlight,
+            cursorVisible: lcd.cursorOn || lcd.blinkOn
+          });
+        }
+      } else if (comp.type === 'TEMPERATURE_SENSOR') {
+        const vccVoltage = circuitGraph.getNodeVoltage(id, 'VCC');
+        queueComponentUpdate(id, {
+          isActive: vccVoltage > 2.5,
+          temperatureCelsius: simulatedTempCelsius,
+          temperatureFahrenheit: simulatedTempCelsius * 9/5 + 32,
+          humidity: simulatedHumidity
+        });
+      } else if (comp.type === 'SEVEN_SEG_CC') {
+        const comVoltage = circuitGraph.getNodeVoltage(id, 'COM1');
+        const isOn = comVoltage < 0.5;
+        const segments: Record<string, boolean> = {};
+        const segmentPins = ['a','b','c','d','e','f','g','dp'];
+        
+        segmentPins.forEach(seg => {
+          const v = circuitGraph!.getNodeVoltage(id, seg);
+          segments[seg] = isOn && v > 2.5;
+        });
+        
+        let displayedDigit: number | null = null;
+        for (const [digit, pattern] of Object.entries(DIGIT_SEGMENTS)) {
+          const matches = segmentPins.every(s => 
+            s === 'dp' ? true : (segments[s] === pattern[s])
+          );
+          if (matches) {
+            displayedDigit = parseInt(digit);
+            break;
+          }
+        }
+        
+        queueComponentUpdate(id, { segments, displayedDigit, isOn });
+      } else if (comp.type === 'SEVEN_SEG_CA') {
+        const comVoltage = circuitGraph.getNodeVoltage(id, 'COM1');
+        const isOn = comVoltage > 2.5;
+        const segments: Record<string, boolean> = {};
+        const segmentPins = ['a','b','c','d','e','f','g','dp'];
+        
+        segmentPins.forEach(seg => {
+          const v = circuitGraph!.getNodeVoltage(id, seg);
+          segments[seg] = isOn && v < 2.5;
+        });
+        
+        let displayedDigit: number | null = null;
+        for (const [digit, pattern] of Object.entries(DIGIT_SEGMENTS)) {
+          const matches = segmentPins.every(s =>
+            s === 'dp' ? true : (segments[s] === pattern[s])
+          );
+          if (matches) {
+            displayedDigit = parseInt(digit);
+            break;
+          }
+        }
+        
+        queueComponentUpdate(id, { segments, displayedDigit, isOn });
+      }
     }
 
-    if (arduinoId) {
-      const nodeId = `${arduinoId}.${pinName}`;
-      // 2. Propagate
-      const updatedNodes = circuitGraph.propagateVoltage(nodeId, voltage);
-      broadcastVoltageUpdates(updatedNodes);
-
-      // 3. Update graph topology (components that modify switches/connections)
-      for (const [id, comp] of circuitGraph.components.entries()) {
-        if (comp.type === 'RELAY') {
-          const state = calculateRelayState(comp, circuitGraph);
-          
-          queueComponentUpdate(id, state);
-          
-          const comNode = `${id}.COM`;
-          const noNode = `${id}.NO`;
-          const ncNode = `${id}.NC`;
-          
-          if (state.isActivated) {
-            circuitGraph.openSwitch(comNode, ncNode);
-            circuitGraph.closeSwitch(comNode, noNode);
-          } else {
-            circuitGraph.openSwitch(comNode, noNode);
-            circuitGraph.closeSwitch(comNode, ncNode);
-          }
-        }
-      }
-
-      // 4. Update state-dependent components (LEDs, LCDs, etc.)
-      for (const [id, comp] of circuitGraph.components.entries()) {
-        if (comp.type === 'LED') {
-          const state = calculateLEDState(comp, circuitGraph);
-          queueComponentUpdate(id, state);
-        } else if (comp.type === 'RESISTOR') {
-          const state = calculateResistorState(comp, circuitGraph);
-          queueComponentUpdate(id, state);
-        } else if (comp.type === 'BUZZER') {
-          const state = calculateBuzzerState(comp, circuitGraph);
-          queueComponentUpdate(id, state);
-        } else if (comp.type === 'LCD_16X2') {
-          if (!lcdControllers[id]) {
-            lcdControllers[id] = new HD44780();
-          }
-          const rs = circuitGraph.getNodeVoltage(id, 'RS') > 2.5;
-          const rw = circuitGraph.getNodeVoltage(id, 'RW') > 2.5;
-          const e = circuitGraph.getNodeVoltage(id, 'E') > 2.5;
-          const d4 = circuitGraph.getNodeVoltage(id, 'D4') > 2.5 ? 1 : 0;
-          const d5 = circuitGraph.getNodeVoltage(id, 'D5') > 2.5 ? 1 : 0;
-          const d6 = circuitGraph.getNodeVoltage(id, 'D6') > 2.5 ? 1 : 0;
-          const d7 = circuitGraph.getNodeVoltage(id, 'D7') > 2.5 ? 1 : 0;
-          const a = circuitGraph.getNodeVoltage(id, 'A') > 2.5;
-
-          const dataNibble = (d7 << 3) | (d6 << 2) | (d5 << 1) | d4;
-          
-          const lcd = lcdControllers[id];
-          const oldLastEnable = lcd.lastEnable;
-          
-          lcd.processPins(rs, rw, e, dataNibble, a);
-          
-          if (oldLastEnable !== lcd.lastEnable) {
-            queueComponentUpdate(id, { 
-              rows: lcd.rows, 
-              cursorRow: lcd.cursorRow, 
-              cursorCol: lcd.cursorCol,
-              backlight: lcd.backlight,
-              cursorVisible: lcd.cursorOn || lcd.blinkOn
-            });
-          }
-        } else if (comp.type === 'TEMPERATURE_SENSOR') {
-          const vccVoltage = circuitGraph.getNodeVoltage(id, 'VCC');
-          const isActive = vccVoltage > 2.5;
-          queueComponentUpdate(id, {
-            isActive,
-            temperatureCelsius: simulatedTempCelsius,
-            temperatureFahrenheit: simulatedTempCelsius * 9/5 + 32,
-            humidity: simulatedHumidity
-          });
-        } else if (comp.type === 'SEVEN_SEG_CC') {
-          const comVoltage = circuitGraph.getNodeVoltage(id, 'COM1');
-          const isOn = comVoltage < 0.5; // COM connected to GND
-          
-          const segments: Record<string, boolean> = {};
-          const segmentPins = ['a','b','c','d','e','f','g','dp'];
-          
-          segmentPins.forEach(seg => {
-            const v = circuitGraph!.getNodeVoltage(id, seg);
-            // CC: segment ON when pin is HIGH and COM is at GND
-            segments[seg] = isOn && v > 2.5;
-          });
-          
-          let displayedDigit: number | null = null;
-          for (const [digit, pattern] of Object.entries(DIGIT_SEGMENTS)) {
-            const matches = segmentPins.every(s => 
-              s === 'dp' ? true : (segments[s] === pattern[s])
-            );
-            if (matches) {
-              displayedDigit = parseInt(digit);
-              break;
-            }
-          }
-          
-          queueComponentUpdate(id, { segments, displayedDigit, isOn });
-        } else if (comp.type === 'SEVEN_SEG_CA') {
-          const comVoltage = circuitGraph.getNodeVoltage(id, 'COM1');
-          const isOn = comVoltage > 2.5; // COM connected to 5V
-          
-          const segments: Record<string, boolean> = {};
-          const segmentPins = ['a','b','c','d','e','f','g','dp'];
-          
-          segmentPins.forEach(seg => {
-            const v = circuitGraph!.getNodeVoltage(id, seg);
-            // CA: segment ON when pin is LOW and COM is at 5V
-            segments[seg] = isOn && v < 2.5;
-          });
-          
-          let displayedDigit: number | null = null;
-          for (const [digit, pattern] of Object.entries(DIGIT_SEGMENTS)) {
-            const matches = segmentPins.every(s =>
-              s === 'dp' ? true : (segments[s] === pattern[s])
-            );
-            if (matches) {
-              displayedDigit = parseInt(digit);
-              break;
-            }
-          }
-          
-          queueComponentUpdate(id, { segments, displayedDigit, isOn });
-        }
-      }
-
-      // Track pulses for Servos
-      if (avrRunner) {
-        if (voltage > 2.5) {
-          pinHighTicks[pinName] = avrRunner.cpu.cycles;
-        } else if (voltage < 2.5 && pinHighTicks[pinName] !== undefined) {
-          const pulseTicks = avrRunner.cpu.cycles - pinHighTicks[pinName];
-          const pulseWidthUs = pulseTicks / 16;
-          
-          for (const [id, comp] of circuitGraph.components.entries()) {
-            if (comp.type === 'SERVO_MOTOR') {
-              if (circuitGraph.findPath(nodeId, `${id}.SIGNAL`)) {
-                // calculateServoState expects dutyCycle based on 20000us period
-                const pseudoDutyCycle = pulseWidthUs / 20000;
-                const servoType = comp.properties?.servoType || 'positional';
-                const state = calculateServoState(pseudoDutyCycle, 544, 2400, servoType);
-                queueComponentUpdate(id, state);
-              }
+    // Track pulses for Servos
+    if (avrRunner) {
+      if (voltage > 2.5) {
+        pinHighTicks[pinName] = avrRunner.cpu.cycles;
+      } else if (voltage < 2.5 && pinHighTicks[pinName] !== undefined) {
+        const pulseTicks = avrRunner.cpu.cycles - pinHighTicks[pinName];
+        const pulseWidthUs = pulseTicks / 16;
+        
+        for (const [id, comp] of circuitGraph.components.entries()) {
+          if (comp.type === 'SERVO_MOTOR') {
+            if (circuitGraph.findPath(nodeId, `${id}.SIGNAL`)) {
+              const pseudoDutyCycle = pulseWidthUs / 20000;
+              const servoType = comp.properties?.servoType || 'positional';
+              const state = calculateServoState(pseudoDutyCycle, 544, 2400, servoType);
+              queueComponentUpdate(id, state);
             }
           }
         }
@@ -1039,18 +1022,15 @@ function handlePinChange(pinName: string, voltage: number) {
 }
 
 function handlePWMChange(pinName: string, dutyCycle: number) {
-  handlePinChange(pinName, dutyCycle * 5.0);
+  const maxV = activeBoardType === 'ESP32_DEVKIT' ? 3.3 : 5.0;
+  handlePinChange(pinName, dutyCycle * maxV);
 
   if (circuitGraph) {
-    let arduinoId = null;
-    for (const [id, comp] of circuitGraph.components.entries()) {
-      if (comp.type === 'ARDUINO_UNO') { arduinoId = id; break; }
-    }
-    if (arduinoId) {
+    const mcu = getMcuComponent();
+    if (mcu) {
       for (const [id, comp] of circuitGraph.components.entries()) {
         if (comp.type === 'SERVO_MOTOR') {
-          // Check if this servo is attached to this pin
-          if (circuitGraph.findPath(`${arduinoId}.${pinName}`, `${id}.SIGNAL`)) {
+          if (circuitGraph.findPath(`${mcu.id}.${pinName}`, `${id}.SIGNAL`)) {
             const state = calculateServoState(dutyCycle);
             queueComponentUpdate(id, state);
           }
@@ -1066,8 +1046,138 @@ export function setAnalogInputVoltage(channel: number, voltage: number) {
   }
 }
 
-function initializeSimulation(hex: string, graphData: any) {
+function initializeSimulation(hex: string, graphData: any, code?: string, boardType?: string) {
   try {
+    const hasEsp32Component = graphData?.components && (
+      graphData.components instanceof Map
+        ? Array.from(graphData.components.values()).some((c: any) => c.type === 'ESP32_DEVKIT')
+        : Object.values(graphData.components).some((c: any) => c.type === 'ESP32_DEVKIT')
+    );
+    const isEsp32 = boardType === 'ESP32_DEVKIT' || hasEsp32Component || (!hex.trim().startsWith(':'));
+    activeBoardType = isEsp32 ? 'ESP32_DEVKIT' : 'ARDUINO_UNO';
+
+    if (isEsp32) {
+      if (esp32Runner) {
+        esp32Runner.stop();
+        esp32Runner = null;
+      }
+      avrRunner = null;
+      circuitGraph = new CircuitGraph();
+      if (graphData) {
+        circuitGraph.loadSerialized(graphData);
+
+        // Seed initial ground and power pins for any ESP32 or Arduino components
+        for (const [nodeId, node] of circuitGraph.nodes.entries()) {
+          const comp = circuitGraph.components.get(node.componentId);
+          if (comp && (comp.type === 'ARDUINO_UNO' || comp.type === 'ESP32_DEVKIT')) {
+            if (node.pinType === 'power') {
+              const v = nodeId.includes('3V3') ? 3.3 : 5.0;
+              const updated = circuitGraph.propagateVoltage(nodeId, v);
+              broadcastVoltageUpdates(updated);
+            } else if (node.pinType === 'ground') {
+              const updated = circuitGraph.propagateVoltage(nodeId, 0.0);
+              broadcastVoltageUpdates(updated);
+            }
+          }
+        }
+
+        // Initialize Push Buttons to Released state
+        for (const [id, comp] of circuitGraph.components.entries()) {
+          if (comp.type === 'PUSH_BUTTON') {
+            const mcu = getMcuComponent();
+            if (mcu) {
+              const allPins = ['D2','D4','D5','D12','D13','D14','D15','D18','D19','D21','D22','D23','D25','D26','D27','D32','D33','D34','D35','VP','VN','CLK','TX0','RX0','TX2','RX2'];
+              for (const pin of allPins) {
+                let reachesMcu = false;
+                for (const pinObj of comp.pins || []) {
+                  if (circuitGraph.findPath(`${id}.${pinObj.id}`, `${mcu.id}.${pin}`)) {
+                    reachesMcu = true;
+                    break;
+                  }
+                }
+                if (reachesMcu) {
+                  const nodeId = `${mcu.id}.${pin}`;
+                  const updated = circuitGraph.propagateVoltage(nodeId, 3.3);
+                  broadcastVoltageUpdates(updated);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      esp32Runner = new Esp32Runner(code || '', {
+        onPinChange: (pinId, voltage) => {
+          handlePinChange(pinId, voltage);
+        },
+        onPinModeChange: (pinId, mode) => {
+          if (circuitGraph) {
+            const mcu = getMcuComponent();
+            if (mcu) {
+              const node = circuitGraph.nodes.get(`${mcu.id}.${pinId}`);
+              if (node) node.pinDirection = mode;
+            }
+          }
+        },
+        getPinVoltage: (pinId) => {
+          if (!circuitGraph) return 0;
+          const mcu = getMcuComponent();
+          if (!mcu) return 0;
+          return circuitGraph.getNodeVoltage(mcu.id, pinId);
+        },
+        onSerialOutput: (text) => {
+          registerActivity();
+          postMessage({ type: 'SERIAL_OUTPUT', payload: { text } });
+        },
+        onServoAngle: (pinId, angle) => {
+          if (!circuitGraph) return;
+          const mcu = getMcuComponent();
+          if (!mcu) return;
+          const nodeId = `${mcu.id}.${pinId}`;
+          for (const [id, comp] of circuitGraph.components.entries()) {
+            if (comp.type === 'SERVO_MOTOR') {
+              if (circuitGraph.findPath(nodeId, `${id}.SIGNAL`)) {
+                const servoType = comp.properties?.servoType || 'positional';
+                queueComponentUpdate(id, { angle, servoType });
+              }
+            }
+          }
+        },
+        onTone: (pinId, freq) => {
+          if (!circuitGraph) return;
+          const mcu = getMcuComponent();
+          if (!mcu) return;
+          const nodeId = `${mcu.id}.${pinId}`;
+          for (const [id, comp] of circuitGraph.components.entries()) {
+            if (comp.type === 'BUZZER') {
+              if (circuitGraph.findPath(nodeId, `${id}.POS`) || circuitGraph.findPath(nodeId, `${id}.PIN_1`)) {
+                queueComponentUpdate(id, { isActive: freq > 0, frequency: freq });
+              }
+            }
+          }
+        },
+        getDistanceCm: () => simulatedDistanceCm,
+        getSensorValues: () => ({ temperature: simulatedTempCelsius, humidity: simulatedHumidity }),
+        onLcdUpdate: (lcdData) => {
+          if (!circuitGraph) return;
+          for (const [id, comp] of circuitGraph.components.entries()) {
+            if (comp.type === 'LCD_16X2_I2C' || comp.type === 'LCD_16X2') {
+              queueComponentUpdate(id, lcdData);
+            }
+          }
+        }
+      });
+
+      lastHex = hex;
+      lastGraphData = graphData;
+      lastCode = code || '';
+      lastBoardType = 'ESP32_DEVKIT';
+
+      postMessage({ type: 'STATUS', value: 'READY' });
+      return;
+    }
+
+    // AVR ATmega328P execution
     const flashData = parseIntelHex(hex);
 
     avrRunner = new AVRRunner(flashData);
@@ -1208,6 +1318,8 @@ function initializeSimulation(hex: string, graphData: any) {
 
     lastHex = hex;
     lastGraphData = graphData;
+    lastCode = code || '';
+    lastBoardType = 'ARDUINO_UNO';
 
     postMessage({ type: 'STATUS', value: 'READY' });
   } catch (error: any) {
@@ -1220,7 +1332,7 @@ self.onmessage = function (e) {
 
   switch (type) {
     case 'INITIALIZE':
-      initializeSimulation(payload.hex, payload.graphData);
+      initializeSimulation(payload.hex, payload.graphData, payload.code, payload.boardType);
       break;
 
     case 'START':
@@ -1232,6 +1344,9 @@ self.onmessage = function (e) {
         lastActivityTime = lastTickTime;
       }
       simulationLoop();
+      if (activeBoardType === 'ESP32_DEVKIT' && esp32Runner) {
+        esp32Runner.start();
+      }
       postMessage({ type: 'STATUS', value: 'RUNNING' });
       break;
 
@@ -1240,6 +1355,9 @@ self.onmessage = function (e) {
       if (simulationLoopTimer) {
         clearTimeout(simulationLoopTimer);
         simulationLoopTimer = null;
+      }
+      if (activeBoardType === 'ESP32_DEVKIT' && esp32Runner) {
+        esp32Runner.pause();
       }
       postMessage({ type: 'STATUS', value: 'PAUSED' });
       break;
@@ -1252,7 +1370,7 @@ self.onmessage = function (e) {
     case 'RESET':
       stopSimulation();
       if (lastHex && lastGraphData) {
-        initializeSimulation(lastHex, lastGraphData);
+        initializeSimulation(lastHex, lastGraphData, lastCode, lastBoardType);
       }
       break;
 
@@ -1267,18 +1385,27 @@ self.onmessage = function (e) {
 
     case 'EXTERNAL_INPUT':
       if (payload.type === 'potentiometer' && circuitGraph) {
-        const voltage = (payload.value / 1023) * 5.0;
+        const voltage = (payload.value / 1023) * (activeBoardType === 'ESP32_DEVKIT' ? 3.3 : 5.0);
         queueComponentUpdate(payload.componentId, { value: payload.value, voltage });
 
-        let arduinoId = null;
-        for (const [id, comp] of circuitGraph.components.entries()) {
-          if (comp.type === 'ARDUINO_UNO') { arduinoId = id; break; }
-        }
-        if (arduinoId) {
-          for (let i = 0; i < 6; i++) {
-            if (circuitGraph.findPath(`${payload.componentId}.WIPER`, `${arduinoId}.A${i}`)) {
-              setAnalogInputVoltage(i, voltage);
-              break;
+        const mcu = getMcuComponent();
+        if (mcu) {
+          if (mcu.type === 'ARDUINO_UNO') {
+            for (let i = 0; i < 6; i++) {
+              if (circuitGraph.findPath(`${payload.componentId}.WIPER`, `${mcu.id}.A${i}`)) {
+                setAnalogInputVoltage(i, voltage);
+                break;
+              }
+            }
+          } else if (mcu.type === 'ESP32_DEVKIT') {
+            const analogPins = ['VP', 'VN', 'D34', 'D35', 'D32', 'D33', 'D25', 'D26'];
+            for (const ap of analogPins) {
+              if (circuitGraph.findPath(`${payload.componentId}.WIPER`, `${mcu.id}.${ap}`)) {
+                const nodeId = `${mcu.id}.${ap}`;
+                const updated = circuitGraph.propagateVoltage(nodeId, voltage);
+                broadcastVoltageUpdates(updated);
+                break;
+              }
             }
           }
         }
@@ -1289,24 +1416,28 @@ self.onmessage = function (e) {
         const comp = circuitGraph.components.get(payload.componentId);
         if (comp && comp.type === 'PUSH_BUTTON') {
           const state = payload.value === 1; // 1 = released (HIGH), 0 = pressed (LOW)
-          
-          let arduinoId = null;
-          for (const [aid, c] of circuitGraph.components.entries()) {
-            if (c.type === 'ARDUINO_UNO') { arduinoId = aid; break; }
-          }
-          
-          if (arduinoId) {
-            const allPins = ['D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13', 'A0','A1','A2','A3','A4','A5'];
+          const mcu = getMcuComponent();
+          if (mcu) {
+            const allPins = mcu.type === 'ESP32_DEVKIT'
+              ? ['D2','D4','D5','D12','D13','D14','D15','D18','D19','D21','D22','D23','D25','D26','D27','D32','D33','D34','D35','VP','VN','CLK','TX0','RX0','TX2','RX2']
+              : ['D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13', 'A0','A1','A2','A3','A4','A5'];
             for (const pin of allPins) {
-              let reachesArduino = false;
+              let reachesMcu = false;
               for (const pinObj of comp.pins || []) {
-                if (circuitGraph.findPath(`${payload.componentId}.${pinObj.id}`, `${arduinoId}.${pin}`)) {
-                  reachesArduino = true;
+                if (circuitGraph.findPath(`${payload.componentId}.${pinObj.id}`, `${mcu.id}.${pin}`)) {
+                  reachesMcu = true;
                   break;
                 }
               }
-              if (reachesArduino) {
-                setArduinoPin(pin, state);
+              if (reachesMcu) {
+                if (mcu.type === 'ARDUINO_UNO') {
+                  setArduinoPin(pin, state);
+                } else {
+                  const nodeId = `${mcu.id}.${pin}`;
+                  const v = state ? 3.3 : 0.0;
+                  const updated = circuitGraph.propagateVoltage(nodeId, v);
+                  broadcastVoltageUpdates(updated);
+                }
                 registerActivity();
               }
             }
@@ -1326,7 +1457,9 @@ self.onmessage = function (e) {
 
     case 'SERIAL_INPUT':
       registerActivity();
-      if (avrRunner) {
+      if (activeBoardType === 'ESP32_DEVKIT' && esp32Runner) {
+        esp32Runner.sendSerialInput(payload.text);
+      } else if (avrRunner) {
         for (let i = 0; i < payload.text.length; i++) {
           avrRunner.usart.writeByte(payload.text.charCodeAt(i));
         }

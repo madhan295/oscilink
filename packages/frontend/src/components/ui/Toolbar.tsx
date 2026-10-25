@@ -80,12 +80,16 @@ export function Toolbar({ leftOpen, setLeftOpen, rightOpen, setRightOpen, errorP
   };
 
   const handleRun = () => {
-    if (!compiledHex) {
+    const components = useWorkspaceStore.getState().components;
+    const hasEsp32 = components.some(c => c.type === 'ESP32_DEVKIT');
+
+    if (!compiledHex && !hasEsp32) {
       toast.error('Please compile the code first');
       return;
     }
     const serializedGraph = useWorkspaceStore.getState().buildCircuitGraph();
-    simulation.initialize(compiledHex, serializedGraph);
+    const currentCode = useEditorStore.getState().code;
+    simulation.initialize(compiledHex || 'esp32_ready', serializedGraph, currentCode);
     simulation.start();
   };
 

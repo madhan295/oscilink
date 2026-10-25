@@ -100,51 +100,61 @@ function parseOutput(stderr: string, tempDir: string): { errors: CompilationErro
   return { errors, warnings };
 }
 
-export async function compileSketch(code: string): Promise<CompileResult> {
+export async function compileSketch(code: string, board: string = 'arduino'): Promise<CompileResult> {
   const sketchId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   const sketchName = `sketch_${sketchId}`;
   const tempDir = path.join(os.tmpdir(), sketchName);
   const sketchPath = path.join(tempDir, `${sketchName}.ino`);
 
+  const isEsp = board === 'esp32' || code.includes('WiFi.h') || code.includes('BluetoothSerial.h');
+  const fqbn = isEsp ? 'esp32:esp32:esp32' : 'arduino:avr:uno';
+
+  let processedCode = code;
+  if (isEsp && !code.includes('LED_BUILTIN 2')) {
+    processedCode = `#ifndef LED_BUILTIN\n#define LED_BUILTIN 2\n#endif\n#line 1 "${sketchName}.ino"\n` + code;
+  }
+
   try {
     fs.mkdirSync(tempDir, { recursive: true });
-    fs.writeFileSync(sketchPath, code, 'utf-8');
+    fs.writeFileSync(sketchPath, processedCode, 'utf-8');
 
     // Run arduino-cli
     const CLI = process.platform === 'win32' 
       ? '"C:\\Users\\madha\\bin\\arduino-cli.exe"'
       : 'arduino-cli';
       
-    const command = `${CLI} compile --no-color --fqbn arduino:avr:uno --output-dir "${tempDir}" "${tempDir}"`;
+    const command = `${CLI} compile --no-color --fqbn ${fqbn} --output-dir "${tempDir}" "${tempDir}"`;
 
     try {
       const { stdout, stderr } = await execAsync(command, { 
-        timeout: 60000,
-        maxBuffer: 4 * 1024 * 1024 // 4MB
+        timeout: 90000,
+        maxBuffer: 8 * 1024 * 1024 // 8MB
       });
 
-      // On success, scan the temp directory for the hex file
+      // On success, scan the temp directory for the output binary/hex file
       const files = fs.readdirSync(tempDir);
+      const binFile = files.find(f => f.endsWith('.bin') && !f.includes('bootloader') && !f.includes('partitions'));
       const hexFile = files.find(f => f.endsWith('.hex') && !f.includes('bootloader'));
+      const outputFile = isEsp ? (binFile || hexFile) : hexFile;
       
-      if (!hexFile) {
+      if (!outputFile) {
         return {
           success: false,
           errors: [{
             line: 0,
             column: 0,
-            message: 'Compilation succeeded but no .hex file was generated.',
+            message: `Compilation succeeded but no ${isEsp ? '.bin' : '.hex'} file was generated.`,
             severity: 'error'
           }]
         };
       }
 
-      const hexContent = fs.readFileSync(path.join(tempDir, hexFile), 'utf-8');
+      const outputContent = fs.readFileSync(path.join(tempDir, outputFile), isEsp ? 'base64' : 'utf-8');
       const { errors, warnings } = parseOutput(stderr, tempDir);
 
       return {
         success: true,
-        hex: hexContent,
+        hex: outputContent,
         errors: errors.length > 0 ? errors : undefined,
         warnings: warnings.length > 0 ? warnings : undefined
       };

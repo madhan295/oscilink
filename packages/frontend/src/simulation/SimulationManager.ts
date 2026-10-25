@@ -83,9 +83,12 @@ class SimulationManager {
       case 'PIN_CHANGE':
         if (typeof store.setPinVoltage === 'function') {
           let compId = payload.componentId;
-          if (compId === 'arduino-uno') {
-            const arduino = useWorkspaceStore.getState().components.find(c => c.type === 'ARDUINO_UNO');
-            if (arduino) compId = arduino.id;
+          if (compId === 'arduino-uno' || compId === 'esp32') {
+            const mcu = useWorkspaceStore.getState().components.find(
+              c => (compId === 'esp32' ? c.type === 'ESP32_DEVKIT' : c.type === 'ARDUINO_UNO') ||
+                   c.type === 'ESP32_DEVKIT' || c.type === 'ARDUINO_UNO'
+            );
+            if (mcu) compId = mcu.id;
           }
           this.pendingPinVoltages[`${compId}-${payload.pinId}`] = payload.voltage;
           this.scheduleFlush();
@@ -175,8 +178,20 @@ class SimulationManager {
     }
   }
 
-  public initialize(hex: string, serializedGraph: any) {
-    this.worker?.postMessage({ type: 'INITIALIZE', payload: { hex, graphData: serializedGraph } });
+  public initialize(hex: string, serializedGraph: any, code?: string) {
+    const components = useWorkspaceStore.getState().components;
+    const hasEsp32 = components.some(c => c.type === 'ESP32_DEVKIT');
+    const boardType = hasEsp32 ? 'ESP32_DEVKIT' : 'ARDUINO_UNO';
+
+    this.worker?.postMessage({
+      type: 'INITIALIZE',
+      payload: {
+        hex,
+        graphData: serializedGraph,
+        code: code || '',
+        boardType
+      }
+    });
     this.initialized = true;
   }
 
